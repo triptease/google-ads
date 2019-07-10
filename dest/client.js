@@ -1,0 +1,129 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const google_auth_library_1 = require("google-auth-library");
+const grpc_1 = __importDefault(require("grpc"));
+const lodash_1 = require("lodash");
+const google_proto_1 = require("../compiled/google-proto");
+const error_parsing_interceptor_1 = require("./error-parsing-interceptor");
+const extract_1 = require("./extract");
+const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
+const services = google_proto_1.google.ads.googleads.v2.services;
+const resources = google_proto_1.google.ads.googleads.v2.resources;
+const Client = grpc_1.default.makeGenericClientConstructor({}, '', {});
+class ResourceNotFoundError extends Error {
+}
+exports.ResourceNotFoundError = ResourceNotFoundError;
+class GoogleAdsClient {
+    constructor(options) {
+        this.options = options;
+        this.auth = new google_auth_library_1.JWT(this.options.authOptions);
+    }
+    getMccAccountId() {
+        return this.options.mccAccountId;
+    }
+    getRpcImpl(serviceName) {
+        const sslCreds = grpc_1.default.credentials.createSsl();
+        const googleCreds = grpc_1.default.credentials.createFromGoogleCredential(this.auth);
+        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc_1.default.credentials.combineChannelCredentials(sslCreds, googleCreds), {
+            interceptors: this.buildInterceptors(),
+        });
+        const metadata = new grpc_1.default.Metadata();
+        metadata.add('developer-token', this.options.developerToken);
+        metadata.add('login-customer-id', this.options.mccAccountId);
+        // tslint:disable-next-line:only-arrow-functions
+        return function (method, requestData, callback) {
+            client.makeUnaryRequest(`/google.ads.googleads.v2.services.${serviceName}/` + method.name, 
+            // @ts-ignore
+            arg => arg, arg => arg, requestData, metadata, null, callback);
+        };
+    }
+    async getFieldsForTable(tableName) {
+        if (!this.fieldsCache) {
+            const fieldQueryService = await this.getService('GoogleAdsFieldService');
+            const response = await fieldQueryService.searchGoogleAdsFields({
+                query: `SELECT name, selectable, category`,
+            });
+            this.fieldsCache = response.results
+                .map(field => extract_1.extract(field, ['name']))
+                .filter(field => field.selectable === true);
+        }
+        return this.fieldsCache.filter(f => f.name.startsWith(`${tableName}.`));
+    }
+    buildSearchSql(tableName, fields, filters = {}, orderBy, orderByDirection = 'ASC', limit) {
+        const fieldSql = fields.map(f => f.name).join(', ');
+        const wheres = [];
+        // tslint:disable-next-line:forin
+        for (const filterName in filters) {
+            const filterValue = filters[filterName];
+            if (!filterValue) {
+                continue;
+            }
+            const filterValues = Array.isArray(filterValue) ? filterValue : [filterValue];
+            const quotedFilters = filterValues.map(filterValue => `"${filterValue}"`);
+            const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(',')})`;
+            wheres.push(filterStatement);
+        }
+        const wheresSql = wheres.join(' and ');
+        return [
+            `SELECT ${fieldSql}`,
+            `FROM ${tableName}`,
+            `${wheresSql ? `WHERE ${wheresSql}` : ''}`,
+            `${orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ''}`,
+            `${limit ? `LIMIT ${limit}` : ''}`,
+        ]
+            .filter(seg => !!seg)
+            .join(' ');
+    }
+    async search(params) {
+        const tableName = lodash_1.snakeCase(params.resource);
+        const objName = lodash_1.camelCase(params.resource);
+        const fields = await this.getFieldsForTable(tableName);
+        const resources = [];
+        const queryService = await this.getService('GoogleAdsService');
+        let token = null;
+        do {
+            const request = {
+                customerId: params.customerId,
+                query: this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? lodash_1.snakeCase(params.orderBy) : undefined, params.orderByDirection, params.limit),
+                pageToken: token,
+                pageSize: 1000,
+            };
+            const result = await queryService.search(request);
+            token = result.nextPageToken;
+            for (const field of result.results) {
+                resources.push(field[objName]);
+            }
+        } while (token);
+        return resources;
+    }
+    async findOne(customerId, resource, resourceId) {
+        const resourceName = `customers/${customerId}/${lodash_1.camelCase(resource)}s/${resourceId}`;
+        const results = await this.search({
+            customerId,
+            resource,
+            // cast as any because we know that all resources have a resource name
+            filters: {
+                resourceName: [resourceName],
+            },
+        });
+        if (results.length > 0) {
+            return results[0];
+        }
+        throw new ResourceNotFoundError(`Resource ${resource} with resourceName ${resourceName} for cusomterId ${customerId} does not exist`);
+    }
+    getService(serviceName) {
+        const constructor = services[serviceName];
+        return new constructor(this.getRpcImpl(serviceName));
+    }
+    buildInterceptors() {
+        const exceptionInterceptor = new error_parsing_interceptor_1.ExceptionInterceptor();
+        const interceptors = [
+            (options, nextCall) => exceptionInterceptor.intercept(options, nextCall),
+        ];
+        return interceptors;
+    }
+}
+exports.GoogleAdsClient = GoogleAdsClient;
