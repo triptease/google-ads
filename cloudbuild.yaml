@@ -1,6 +1,6 @@
 steps:
-  - name: "gcr.io/cloud-builders/yarn"
-    args: ["install"]
-  - name: "gcr.io/cloud-builders/yarn"
-    args: ["test"]
+  - name: "gcr.io/triptease-acquisitions/cloud-builder"
+    args: ["yarn", "install"]
+  - name: "gcr.io/triptease-acquisitions/cloud-builder"
+    args: ["yarn", "test"]
 tags: ["google-ads"]
