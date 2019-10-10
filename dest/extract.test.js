@@ -9,12 +9,12 @@ const extract_1 = require("./extract");
 describe('fattern', () => {
     it('should hoist objs value properties', () => {
         const result = extract_1.flattern({
-            resourceName: 'customers/7289688933/campaigns/1758658058',
+            resourceName: 'customers/123/campaigns/456',
             id: {
                 value: 1758658058,
             },
             name: {
-                value: 'Kauai Shores Hotel',
+                value: 'A Hotel',
             },
             status: 'PAUSED',
             networkSettings: {
@@ -34,9 +34,9 @@ describe('fattern', () => {
             },
         });
         expect(result).toEqual({
-            resourceName: 'customers/7289688933/campaigns/1758658058',
+            resourceName: 'customers/123/campaigns/456',
             id: 1758658058,
-            name: 'Kauai Shores Hotel',
+            name: 'A Hotel',
             status: 'PAUSED',
             networkSettings: {
                 targetGoogleSearch: true,
