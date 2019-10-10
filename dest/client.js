@@ -134,7 +134,7 @@ class GoogleAdsClient {
                     yield yield __await(field[objName]);
                 }
             } while (token);
-            return yield __await(NaN);
+            return yield __await(void 0);
         });
     }
     async findOne(customerId, resource, resourceId) {

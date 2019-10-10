@@ -179,7 +179,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         yield (field as any)[objName];
       }
     } while (token);
-    return NaN;
+    return;
   }
 
   public async findOne<R extends resourceNames>(
