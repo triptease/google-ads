@@ -141,10 +141,19 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public async search<R extends resourceNames>(
     params: ClientSearchParams<R>
   ): Promise<Array<InstanceType<resources[R]>>> {
+    const results = [];
+    for await (const x of this.searchGenerator(params)) {
+      results.push(x)
+    }
+    return results
+  }
+
+  public async * searchGenerator<R extends resourceNames>(
+    params: ClientSearchParams<R>
+  ) {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
     const fields = await this.getFieldsForTable(tableName);
-    const resources = [];
     const queryService = await this.getService('GoogleAdsService');
     let token: string | null = null;
 
@@ -167,11 +176,10 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       token = result.nextPageToken as string;
 
       for (const field of result.results) {
-        resources.push((field as any)[objName]);
+        yield (field as any)[objName]
       }
     } while (token);
-
-    return resources;
+    return NaN
   }
 
   public async findOne<R extends resourceNames>(
