@@ -176,10 +176,10 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       token = result.nextPageToken as string;
 
       for (const field of result.results) {
-        yield (field as any)[objName]
+        yield (field as any)[objName];
       }
     } while (token);
-    return NaN
+    return NaN;
   }
 
   public async findOne<R extends resourceNames>(
