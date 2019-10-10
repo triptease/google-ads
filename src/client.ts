@@ -150,7 +150,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
   public async * searchGenerator<R extends resourceNames>(
     params: ClientSearchParams<R>
-  ) {
+  ): AsyncIterable<InstanceType<resources[R]>> {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
     const fields = await this.getFieldsForTable(tableName);
