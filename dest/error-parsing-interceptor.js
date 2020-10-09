@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const grpc_1 = __importDefault(require("grpc"));
 const google_proto_1 = require("../compiled/google-proto");
-const FAILURE_KEY = 'google.ads.googleads.v2.errors.googleadsfailure-bin';
+const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
 const RETRY_STATUS_CODES = [grpc_1.default.status.INTERNAL, grpc_1.default.status.RESOURCE_EXHAUSTED];
 class ExceptionInterceptor {
     constructor() {
@@ -63,7 +63,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map(bytes => google_proto_1.google.ads.googleads.v2.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map(bytes => google_proto_1.google.ads.googleads.v5.errors.GoogleAdsFailure.decode(bytes));
 }
 class GaClientError extends Error {
     constructor(failures) {

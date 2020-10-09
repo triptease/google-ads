@@ -2,7 +2,7 @@ import grpc from 'grpc';
 
 import { google } from '../compiled/google-proto';
 
-const FAILURE_KEY = 'google.ads.googleads.v2.errors.googleadsfailure-bin';
+const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
 const RETRY_STATUS_CODES = [grpc.status.INTERNAL, grpc.status.RESOURCE_EXHAUSTED];
 
 type NextCall = (options: grpc.CallOptions) => grpc.InterceptingCall | null;
@@ -76,18 +76,18 @@ export class ExceptionInterceptor {
 
 function parseGoogleAdsErrorFromMetadata(
   metadata: grpc.Metadata | undefined
-): google.ads.googleads.v2.errors.GoogleAdsFailure[] {
+): google.ads.googleads.v5.errors.GoogleAdsFailure[] {
   if (!metadata) {
     return [];
   }
 
   const failureArray = metadata.get(FAILURE_KEY);
 
-  return failureArray.map(bytes => google.ads.googleads.v2.errors.GoogleAdsFailure.decode(bytes as any));
+  return failureArray.map(bytes => google.ads.googleads.v5.errors.GoogleAdsFailure.decode(bytes as any));
 }
 
 export class GaClientError extends Error {
-  constructor(readonly failures: google.ads.googleads.v2.errors.GoogleAdsFailure[]) {
+  constructor(readonly failures: google.ads.googleads.v5.errors.GoogleAdsFailure[]) {
     super(JSON.stringify(failures, null, 2));
   }
 }

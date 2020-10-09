@@ -25,6 +25,10 @@ export function flattern<T>(obj: T): MapReturnType<T> {
     return anyObj.value;
   }
 
+  if (Long.isLong(anyObj)) {
+    return parseInt(anyObj, 10) as any;
+  }
+
   if (_.isArray(anyObj)) {
     return anyObj.map(flattern) as any;
   }

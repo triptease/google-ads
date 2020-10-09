@@ -16,13 +16,13 @@ function buildMockGetServices(pages: number = 1) {
          searchGoogleAdsFields: jest.fn(async () => {
             return {
                results: [
-                  { name: { value: 'campaign.status' }, selectable: { value: true }, },
-                  { name: { value: 'campaign.count' }, selectable: { value: false }, },
+                  { name: 'campaign.status', selectable: true },
+                  { name: 'campaign.count', selectable: false },
                ],
                totalResultsCount: 1000,
-            } as Partial<google.ads.googleads.v2.services.SearchGoogleAdsFieldsResponse>;
+            } as Partial<google.ads.googleads.v5.services.SearchGoogleAdsFieldsResponse>;
          }),
-      } as Partial<google.ads.googleads.v2.services.GoogleAdsFieldService>,
+      } as Partial<google.ads.googleads.v5.services.GoogleAdsFieldService>,
 
       GoogleAdsService: {
          search: jest.fn(async () => {
@@ -34,9 +34,9 @@ function buildMockGetServices(pages: number = 1) {
                      campaign: { name: 'foo ' + pageNumber }
                   }
                ],
-            } as Partial<google.ads.googleads.v2.services.SearchGoogleAdsResponse>;
+            } as Partial<google.ads.googleads.v5.services.SearchGoogleAdsResponse>;
          }),
-      } as Partial<google.ads.googleads.v2.services.GoogleAdsService>,
+      } as Partial<google.ads.googleads.v5.services.GoogleAdsService>,
    };
 
 
@@ -208,7 +208,7 @@ describe('GoogleAdsClient', () => {
       it('should get a service', async () => {
          const client = new GoogleAdsClient(settings);
          const service = client.getService("CampaignService");
-         expect(service).toBeInstanceOf(google.ads.googleads.v2.services.CampaignService);
+         expect(service).toBeInstanceOf(google.ads.googleads.v5.services.CampaignService);
       });
    });
 });

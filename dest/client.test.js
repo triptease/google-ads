@@ -16,8 +16,8 @@ function buildMockGetServices(pages = 1) {
             searchGoogleAdsFields: jest.fn(async () => {
                 return {
                     results: [
-                        { name: { value: 'campaign.status' }, selectable: { value: true }, },
-                        { name: { value: 'campaign.count' }, selectable: { value: false }, },
+                        { name: 'campaign.status', selectable: true },
+                        { name: 'campaign.count', selectable: false },
                     ],
                     totalResultsCount: 1000,
                 };
@@ -175,7 +175,7 @@ describe('GoogleAdsClient', () => {
         it('should get a service', async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v2.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v5.services.CampaignService);
         });
     });
 });

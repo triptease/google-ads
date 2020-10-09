@@ -11,7 +11,7 @@ export declare class ExceptionInterceptor {
     private handleGrpcFailure;
 }
 export declare class GaClientError extends Error {
-    readonly failures: google.ads.googleads.v2.errors.GoogleAdsFailure[];
-    constructor(failures: google.ads.googleads.v2.errors.GoogleAdsFailure[]);
+    readonly failures: google.ads.googleads.v5.errors.GoogleAdsFailure[];
+    constructor(failures: google.ads.googleads.v5.errors.GoogleAdsFailure[]);
 }
 export {};
