@@ -72,16 +72,14 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     metadata.add('developer-token', this.options.developerToken);
     metadata.add('login-customer-id', this.options.mccAccountId);
 
-    // tslint:disable-next-line:only-arrow-functions
     return function(method, requestData, callback) {
       client.makeUnaryRequest(
         `/google.ads.googleads.v5.services.${serviceName}/` + method.name,
-        // @ts-ignore
-        arg => arg,
-        arg => arg,
+        (value: Uint8Array) => Buffer.from(value),
+        (value: Buffer) => value,
         requestData,
         metadata,
-        null,
+        {},
         callback
       );
     };
