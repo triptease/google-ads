@@ -1,11 +1,10 @@
-import grpc from 'grpc';
-
+import * as grpc from '@grpc/grpc-js';
 import { google } from '../compiled/google-proto';
 
 const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
 const RETRY_STATUS_CODES = [grpc.status.INTERNAL, grpc.status.RESOURCE_EXHAUSTED];
 
-type NextCall = (options: grpc.CallOptions) => grpc.InterceptingCall | null;
+type NextCall = (options: grpc.CallOptions) => grpc.InterceptingCall;
 export type InterceptorMethod = (options: grpc.CallOptions, nextCall: NextCall) => any;
 
 export class ExceptionInterceptor {

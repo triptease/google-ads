@@ -1,6 +1,6 @@
-import grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 import { google } from '../compiled/google-proto';
-declare type NextCall = (options: grpc.CallOptions) => grpc.InterceptingCall | null;
+declare type NextCall = (options: grpc.CallOptions) => grpc.InterceptingCall;
 export declare type InterceptorMethod = (options: grpc.CallOptions, nextCall: NextCall) => any;
 export declare class ExceptionInterceptor {
     private requestInterceptor;

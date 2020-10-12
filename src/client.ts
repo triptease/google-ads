@@ -1,5 +1,5 @@
 import { JWT, JWTOptions, OAuth2Client } from 'google-auth-library';
-import grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 import { camelCase, snakeCase } from 'lodash';
 import * as $protobuf from 'protobufjs';
 
@@ -226,7 +226,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const exceptionInterceptor = new ExceptionInterceptor();
 
     const interceptors: InterceptorMethod[] = [
-      (options: grpc.CallOptions, nextCall: (options: grpc.CallOptions) => grpc.InterceptingCall | null) =>
+      (options: grpc.CallOptions, nextCall: (options: grpc.CallOptions) => grpc.InterceptingCall) =>
         exceptionInterceptor.intercept(options, nextCall),
     ];
 

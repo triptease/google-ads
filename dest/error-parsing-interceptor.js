@@ -1,21 +1,38 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const grpc_1 = __importDefault(require("grpc"));
+exports.GaClientError = exports.ExceptionInterceptor = void 0;
+const grpc = __importStar(require("@grpc/grpc-js"));
 const google_proto_1 = require("../compiled/google-proto");
 const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
-const RETRY_STATUS_CODES = [grpc_1.default.status.INTERNAL, grpc_1.default.status.RESOURCE_EXHAUSTED];
+const RETRY_STATUS_CODES = [grpc.status.INTERNAL, grpc.status.RESOURCE_EXHAUSTED];
 class ExceptionInterceptor {
     constructor() {
         this.requestInterceptor = this.buildRequester();
     }
     intercept(options, nextCall) {
-        return new grpc_1.default.InterceptingCall(nextCall(options), this.requestInterceptor);
+        return new grpc.InterceptingCall(nextCall(options), this.requestInterceptor);
     }
     buildRequester() {
-        return (new grpc_1.default.RequesterBuilder()
+        return (new grpc.RequesterBuilder()
             // tslint:disable-next-line:ban-types
             .withStart((metadata, listener, next) => {
             const newListener = this.buildListener();
@@ -24,13 +41,13 @@ class ExceptionInterceptor {
             .build());
     }
     buildListener() {
-        return (new grpc_1.default.ListenerBuilder()
+        return (new grpc.ListenerBuilder()
             // tslint:disable-next-line:ban-types
             .withOnReceiveStatus((status, next) => {
-            if (status.code !== grpc_1.default.status.OK) {
+            if (status.code !== grpc.status.OK) {
                 // TODO: Throw this error instead of returning a new status?
                 const error = this.handleGrpcFailure(status);
-                const errorStatus = new grpc_1.default.StatusBuilder()
+                const errorStatus = new grpc.StatusBuilder()
                     .withCode(status.code)
                     .withDetails(error.message)
                     .withMetadata(status.metadata)
