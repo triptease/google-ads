@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MockGoogleAdsClient = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const jest_mock_1 = __importDefault(require("jest-mock"));
 const lodash_1 = require("lodash");
@@ -51,11 +52,11 @@ class MockGoogleAdsClient {
             const { operations, customerId } = options;
             operations.forEach((operation) => {
                 if ('create' in operation) {
-                    const obj = Object.assign({}, (operation.create.resourceName ? {} : this.getNewIdentifer(resourceType, customerId)), operation.create, this.getServerGeneratedOptions(resourceType, customerId, operation.create));
+                    const obj = Object.assign(Object.assign(Object.assign({}, (operation.create.resourceName ? {} : this.getNewIdentifer(resourceType, customerId))), operation.create), this.getServerGeneratedOptions(resourceType, customerId, operation.create));
                     return (this.resources[resourceType][obj.resourceName] = obj);
                 }
                 else if ('update' in operation) {
-                    return (this.resources[resourceType][operation.update.resourceName] = Object.assign({}, this.resources[resourceType][operation.update.resourceName], operation.update));
+                    return (this.resources[resourceType][operation.update.resourceName] = Object.assign(Object.assign({}, this.resources[resourceType][operation.update.resourceName]), operation.update));
                 }
                 else if ('remove' in operation) {
                     return delete this.resources[resourceType][operation.remove];
@@ -96,7 +97,7 @@ class MockGoogleAdsClient {
                         const resourceOpName = Object.keys(operation)[0];
                         const resourceName = resourceOpName.substr(0, resourceOpName.length - 'Operation'.length);
                         const service = this.getService(`${resourceName}Service`);
-                        service[`mutate${upperCaseFirstLetter(resourceName)}s`](Object.assign({}, options, { operations: [operation[resourceOpName]] }));
+                        service[`mutate${upperCaseFirstLetter(resourceName)}s`](Object.assign(Object.assign({}, options), { operations: [operation[resourceOpName]] }));
                     });
                 }),
             };
@@ -108,7 +109,7 @@ class MockGoogleAdsClient {
         if (serviceName === 'CustomerService') {
             additionMethods = {
                 createCustomerClient: ({ customerId, customerClient }) => {
-                    const fullCustomer = Object.assign({}, this.getNewIdentifer('Customer', ''), customerClient);
+                    const fullCustomer = Object.assign(Object.assign({}, this.getNewIdentifer('Customer', '')), customerClient);
                     this.resources.CustomerClient = this.resources.CustomerClient || [];
                     this.resources.CustomerClient[fullCustomer.resourceName] = {
                         resourceName: fullCustomer.resourceName,

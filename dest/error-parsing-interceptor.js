@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GaClientError = exports.ExceptionInterceptor = void 0;
 const grpc_1 = __importDefault(require("grpc"));
 const google_proto_1 = require("../compiled/google-proto");
 const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';

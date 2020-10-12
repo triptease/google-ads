@@ -15,18 +15,22 @@ type FlatternExtractObject<X> = { [key in keyof X]: MapReturnType<X[key]> };
 
 export type flattern<T> = MapReturnType<T>;
 
+function longToNumber(value: Long): number {
+  return parseInt(value.toString(), 10);
+}
+
 export function flattern<T>(obj: T): MapReturnType<T> {
   const anyObj = obj as any;
 
   if (anyObj instanceof Object && 'value' in anyObj) {
     if (Long.isLong(anyObj.value)) {
-      return parseInt(anyObj.value, 10) as any;
+      return longToNumber(anyObj.value) as any
     }
     return anyObj.value;
   }
 
   if (Long.isLong(anyObj)) {
-    return parseInt(anyObj, 10) as any;
+    return longToNumber(anyObj) as any;
   }
 
   if (_.isArray(anyObj)) {

@@ -5,17 +5,17 @@
   "license": "MIT",
   "dependencies": {
     "@types/google-protobuf": "^3.2.7",
-    "@types/jest": "^24.0.13",
+    "@types/jest": "^26.0.14",
     "@types/lodash": "^4.14.123",
     "@types/long": "^4.0.0",
     "google-auth-library": "^3.1.2",
     "google-protobuf": "^3.7.1",
     "grpc": "^1.24.3",
-    "jest": "^24.7.1",
+    "jest": "^26.5.3",
     "lodash": "^4.17.11",
     "protobufjs": "^6.8.8",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.4.5"
+    "ts-jest": "^26.4.1",
+    "typescript": "^4.0.3"
   },
   "scripts": {
     "build": "./compile-lib.sh && yarn tsc",
