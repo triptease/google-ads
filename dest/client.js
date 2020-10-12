@@ -37,13 +37,10 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function reject(value) { resume("throw", value); }
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoogleAdsClient = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
 const google_auth_library_1 = require("google-auth-library");
-const grpc_1 = __importDefault(require("grpc"));
+const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
 const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
@@ -52,7 +49,7 @@ const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
 const services = google_proto_1.google.ads.googleads.v5.services;
 const resources = google_proto_1.google.ads.googleads.v5.resources;
-const Client = grpc_1.default.makeGenericClientConstructor({}, '', {});
+const Client = grpc.makeGenericClientConstructor({}, '', {});
 class ResourceNotFoundError extends Error {
 }
 exports.ResourceNotFoundError = ResourceNotFoundError;
@@ -68,12 +65,12 @@ class GoogleAdsClient {
         return this.options.mccAccountId;
     }
     getRpcImpl(serviceName) {
-        const sslCreds = grpc_1.default.credentials.createSsl();
-        const googleCreds = grpc_1.default.credentials.createFromGoogleCredential(this.auth);
-        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc_1.default.credentials.combineChannelCredentials(sslCreds, googleCreds), {
+        const sslCreds = grpc.credentials.createSsl();
+        const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
+        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), {
             interceptors: this.buildInterceptors(),
         });
-        const metadata = new grpc_1.default.Metadata();
+        const metadata = new grpc.Metadata();
         metadata.add('developer-token', this.options.developerToken);
         metadata.add('login-customer-id', this.options.mccAccountId);
         // tslint:disable-next-line:only-arrow-functions
