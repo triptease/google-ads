@@ -1,9 +1,9 @@
 import { JWTOptions } from 'google-auth-library';
 import { google } from '../compiled/google-proto';
-declare const services: typeof google.ads.googleads.v2.services;
+declare const services: typeof google.ads.googleads.v5.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
-declare const resources: typeof google.ads.googleads.v2.resources;
+declare const resources: typeof google.ads.googleads.v5.resources;
 declare type resources = typeof resources;
 declare type resourceNames = keyof resources;
 export interface GoogleAdsClientOptions {
@@ -12,6 +12,8 @@ export interface GoogleAdsClientOptions {
     mccAccountId: string;
 }
 export declare class ResourceNotFoundError extends Error {
+}
+export declare class InvalidRPCServiceError extends Error {
 }
 export interface ClientSearchParams<R extends resourceNames> {
     customerId: string;

@@ -21,20 +21,31 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const google_auth_library_1 = require("google-auth-library");
 const grpc_1 = __importDefault(require("grpc"));
 const lodash_1 = require("lodash");
+const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const error_parsing_interceptor_1 = require("./error-parsing-interceptor");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
-const services = google_proto_1.google.ads.googleads.v2.services;
-const resources = google_proto_1.google.ads.googleads.v2.resources;
+const services = google_proto_1.google.ads.googleads.v5.services;
+const resources = google_proto_1.google.ads.googleads.v5.resources;
 const Client = grpc_1.default.makeGenericClientConstructor({}, '', {});
 class ResourceNotFoundError extends Error {
 }
 exports.ResourceNotFoundError = ResourceNotFoundError;
+class InvalidRPCServiceError extends Error {
+}
+exports.InvalidRPCServiceError = InvalidRPCServiceError;
 class GoogleAdsClient {
     constructor(options) {
         this.options = options;
@@ -54,7 +65,7 @@ class GoogleAdsClient {
         metadata.add('login-customer-id', this.options.mccAccountId);
         // tslint:disable-next-line:only-arrow-functions
         return function (method, requestData, callback) {
-            client.makeUnaryRequest(`/google.ads.googleads.v2.services.${serviceName}/` + method.name, 
+            client.makeUnaryRequest(`/google.ads.googleads.v5.services.${serviceName}/` + method.name, 
             // @ts-ignore
             arg => arg, arg => arg, requestData, metadata, null, callback);
         };
@@ -154,7 +165,12 @@ class GoogleAdsClient {
     }
     getService(serviceName) {
         const constructor = services[serviceName];
-        return new constructor(this.getRpcImpl(serviceName));
+        if (constructor.prototype instanceof $protobuf.rpc.Service) {
+            const rpcServiceConstructor = constructor;
+            const rpcImplementation = this.getRpcImpl(serviceName);
+            return new rpcServiceConstructor(rpcImplementation);
+        }
+        throw new InvalidRPCServiceError(`Service with serviceName ${serviceName} does not support remote procedure calls`);
     }
     buildInterceptors() {
         const exceptionInterceptor = new error_parsing_interceptor_1.ExceptionInterceptor();

@@ -14,8 +14,8 @@ const hash32 = (str) => crypto_1.default
     .update(JSON.stringify(str))
     .digest('hex')
     .substr(0, 32);
-const TrackingCodeType = google_proto_1.google.ads.googleads.v2.enums.TrackingCodeTypeEnum.TrackingCodeType;
-const TrackingCodePageFormat = google_proto_1.google.ads.googleads.v2.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+const TrackingCodeType = google_proto_1.google.ads.googleads.v5.enums.TrackingCodeTypeEnum.TrackingCodeType;
+const TrackingCodePageFormat = google_proto_1.google.ads.googleads.v5.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 function arrayify(v) {
     if (Array.isArray(v)) {
         return v;
@@ -127,7 +127,7 @@ class MockGoogleAdsClient {
         let resources = params.resource in this.resources ? Object.values(this.resources[params.resource]) : [];
         if (params.filters !== undefined) {
             resources = resources.filter((gResource) => {
-                const gResourceStringed = google_proto_1.google.ads.googleads.v2.resources[params.resource].toObject(gResource, {
+                const gResourceStringed = google_proto_1.google.ads.googleads.v5.resources[params.resource].toObject(gResource, {
                     enums: String,
                 });
                 const resource = extract_1.flattern(gResourceStringed);

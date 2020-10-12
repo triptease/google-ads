@@ -9,10 +9,12 @@ mkdir -p ./compiled
 
 git clone https://github.com/googleapis/googleapis.git
 cd googleapis
-git checkout f46206aff84f4b2cde590f1e0791112214f07080
+# most recent commit to GoogleAds protobuf definitions:
+# https://github.com/googleapis/googleapis/tree/master/google/ads/googleads
+git checkout ff957657d9597720fea3ba1f86e61c22f0193bf8
 cd ../
 
-ADS_VERSION=v2
+ADS_VERSION=v5
 PROTO_ROOT_DIR=googleapis/
 PROTO_SRC_DIR=google/ads/googleads/$(echo $ADS_VERSION)/**/*.proto
 PROTO_SRC_DEPENDENCIES=google/**/*.proto

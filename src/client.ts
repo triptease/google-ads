@@ -9,11 +9,11 @@ import { extract } from './extract';
 
 const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
 
-const services = google.ads.googleads.v2.services;
+const services = google.ads.googleads.v5.services;
 type services = typeof services;
 type serviceNames = keyof services;
 
-const resources = google.ads.googleads.v2.resources;
+const resources = google.ads.googleads.v5.resources;
 type resources = typeof resources;
 type resourceNames = keyof resources;
 
@@ -26,6 +26,8 @@ export interface GoogleAdsClientOptions {
 }
 
 export class ResourceNotFoundError extends Error {}
+export class InvalidRPCServiceError extends Error {
+}
 
 export interface ClientSearchParams<R extends resourceNames> {
   customerId: string;
@@ -73,7 +75,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     // tslint:disable-next-line:only-arrow-functions
     return function(method, requestData, callback) {
       client.makeUnaryRequest(
-        `/google.ads.googleads.v2.services.${serviceName}/` + method.name,
+        `/google.ads.googleads.v5.services.${serviceName}/` + method.name,
         // @ts-ignore
         arg => arg,
         arg => arg,
@@ -85,7 +87,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     };
   }
 
-  private fieldsCache: undefined | Array<extract<google.ads.googleads.v2.resources.IGoogleAdsField, 'name'>>;
+  private fieldsCache: undefined | Array<extract<google.ads.googleads.v5.resources.IGoogleAdsField, 'name'>>;
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
       const fieldQueryService = await this.getService('GoogleAdsFieldService');
@@ -209,7 +211,15 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]> {
     const constructor = services[serviceName];
 
-    return new constructor(this.getRpcImpl(serviceName)) as InstanceType<services[T]>;
+    if (constructor.prototype instanceof $protobuf.rpc.Service) {
+      const rpcServiceConstructor = constructor as typeof $protobuf.rpc.Service;
+      const rpcImplementation = this.getRpcImpl(serviceName);
+      return new rpcServiceConstructor(rpcImplementation) as InstanceType<services[T]>;
+    }
+
+    throw new InvalidRPCServiceError(
+      `Service with serviceName ${serviceName} does not support remote procedure calls`,
+    );
   }
 
   private buildInterceptors(): InterceptorMethod[] {

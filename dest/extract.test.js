@@ -53,19 +53,17 @@ describe('fattern', () => {
     });
     test('extract should not mangle Long values', () => {
         // create a simple protobuf object with a campaign id in it
-        const longValue = long_1.default.fromNumber(12345);
-        const id = new google_proto_1.google.protobuf.Int64Value({ value: longValue });
-        const campaign = new google_proto_1.google.ads.googleads.v2.resources.Campaign({ id });
-        const row = new google_proto_1.google.ads.googleads.v2.services.GoogleAdsRow({ campaign });
+        const id = long_1.default.fromNumber(12345);
+        const campaign = new google_proto_1.google.ads.googleads.v5.resources.Campaign({ id });
+        const row = new google_proto_1.google.ads.googleads.v5.services.GoogleAdsRow({ campaign });
         const extractedRow = extract_1.extract(row, ['campaign']);
         expect(extractedRow.campaign.id).toBe(12345);
         const extractedCampaign = extract_1.extract(extractedRow.campaign, ['id']);
         expect(extractedCampaign.id).toBe(12345);
     });
     test('flattern should not mangle Long values', () => {
-        const longValue = long_1.default.fromNumber(12345);
-        const id = new google_proto_1.google.protobuf.Int64Value({ value: longValue });
-        const campaign = new google_proto_1.google.ads.googleads.v2.resources.Campaign({ id });
+        const id = long_1.default.fromNumber(12345);
+        const campaign = new google_proto_1.google.ads.googleads.v5.resources.Campaign({ id });
         const flattenedCampaign = extract_1.flattern(campaign);
         expect(flattenedCampaign.id).toEqual(12345);
         const reFlatternedCampaign = extract_1.flattern(flattenedCampaign);
