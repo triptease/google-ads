@@ -5,15 +5,16 @@ import { google } from '../compiled/google-proto';
 import { ClientSearchParams, IGoogleAdsClient, ResourceNotFoundError } from './client';
 import { flattern } from './extract';
 
+import ITagSnippet = google.ads.googleads.v5.common.ITagSnippet;
+import TrackingCodeType = google.ads.googleads.v5.enums.TrackingCodeTypeEnum.TrackingCodeType;
+import TrackingCodePageFormat = google.ads.googleads.v5.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+
 const hash32 = (str: any) =>
   crypto
     .createHash('md5')
     .update(JSON.stringify(str))
     .digest('hex')
     .substr(0, 32);
-
-const TrackingCodeType = google.ads.googleads.v5.enums.TrackingCodeTypeEnum.TrackingCodeType;
-const TrackingCodePageFormat = google.ads.googleads.v5.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 
 function arrayify(v: any) {
   if (Array.isArray(v)) {
@@ -204,56 +205,37 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
   private getServerGeneratedOptions(resourceName: string, customerId: string, obj: any) {
     switch (resourceName) {
       case 'ConversionAction':
+        const resource = flattern(obj)
         const adwordsAccountId = `AW-RND_${customerId}`;
-        const conversionTrackingId = `RND_${obj.name.value}`;
-        return {
-          tagSnippets: [
-            {
-              type: TrackingCodeType.WEBPAGE_ONCLICK,
-              pageFormat: TrackingCodePageFormat.HTML,
-              globalSiteTag: {
-                value:
-                  "<!-- Global site tag (gtag.js) - Google Ads: 741508461 -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=AW-741508461\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'AW-741508461');\n</script>\n",
-              },
-              eventSnippet: {
-                value: `<!-- Event snippet for gekko-25dc9f1dee9eebb8 conversion page\nIn your html page, add the snippet and call gtag_report_conversion when someone clicks on the chosen link or button. -->\n<script>\nfunction gtag_report_conversion(url) {\n  var callback = function () {\n    if (typeof(url) != 'undefined') {\n      window.location = url;\n    }\n  };\n  gtag('event', 'conversion', {\n      'send_to': '${adwordsAccountId}/${conversionTrackingId}',\n      'value': 0.0,\n      'currency': 'USD',\n      'event_callback': callback\n  });\n  return false;\n}\n</script>\n`,
-              },
-            },
-            {
-              type: TrackingCodeType.WEBPAGE_ONCLICK,
-              pageFormat: TrackingCodePageFormat.AMP,
-              globalSiteTag: {
-                value:
-                  '<!-- Global site tag (gtag) - Google Ads: 741508461 -->\n<amp-analytics type="gtag" data-credentials="include">\n<script type="application/json">\n{\n  "vars": {\n    "gtag_id": "AW-741508461",\n    "config": {\n      "AW-741508461": {\n        "groups": "default"\n      }\n    }\n  },\n  "triggers": {\n  }\n}\n</script>\n</amp-analytics>\n',
-              },
-              eventSnippet: {
-                value: `\"C_dhkw47fQ3-A\": {\n  \"on\": \"click\",\n  \"selector\": \"CSS_SELECTOR\",\n  \"vars\": {\n    \"event_name\": \"conversion\",\n    \"value\": 0.0,\n    \"currency\": \"USD\",\n    \"send_to\": [\"${adwordsAccountId}/${conversionTrackingId}\"]\n  }\n}\n`,
-              },
-            },
-            {
-              type: TrackingCodeType.WEBPAGE,
-              pageFormat: TrackingCodePageFormat.HTML,
-              globalSiteTag: {
-                value:
-                  "<!-- Global site tag (gtag.js) - Google Ads: 741508461 -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=AW-741508461\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'AW-741508461');\n</script>\n",
-              },
-              eventSnippet: {
-                value: `<!-- Event snippet for gekko-25dc9f1dee9eebb8 conversion page -->\n<script>\n  gtag('event', 'conversion', {\n      'send_to': '${adwordsAccountId}/${conversionTrackingId}',\n      'value': 0.0,\n      'currency': 'USD'\n  });\n</script>\n`,
-              },
-            },
-            {
-              type: TrackingCodeType.WEBPAGE,
-              pageFormat: TrackingCodePageFormat.AMP,
-              globalSiteTag: {
-                value:
-                  '<!-- Global site tag (gtag) - Google Ads: 741508461 -->\n<amp-analytics type="gtag" data-credentials="include">\n<script type="application/json">\n{\n  "vars": {\n    "gtag_id": "AW-741508461",\n    "config": {\n      "AW-741508461": {\n        "groups": "default"\n      }\n    }\n  },\n  "triggers": {\n  }\n}\n</script>\n</amp-analytics>\n',
-              },
-              eventSnippet: {
-                value: `\"C_dhkw47fQ3-A\": {\n  \"on\": \"visible\",\n  \"vars\": {\n    \"event_name\": \"conversion\",\n    \"value\": 0.0,\n    \"currency\": \"USD\",\n    \"send_to\": [\"${adwordsAccountId}/${conversionTrackingId}\"]\n  }\n}\n`,
-              },
-            },
-          ],
-        };
+        const conversionTrackingId = `RND_${resource.name}`;
+        const tagSnippets: ITagSnippet[] = [
+          {
+            type: TrackingCodeType.WEBPAGE_ONCLICK,
+            pageFormat: TrackingCodePageFormat.HTML,
+            globalSiteTag: "<!-- Global site tag (gtag.js) - Google Ads: 741508461 -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=AW-741508461\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'AW-741508461');\n</script>\n",
+            eventSnippet: `<!-- Event snippet for gekko-25dc9f1dee9eebb8 conversion page\nIn your html page, add the snippet and call gtag_report_conversion when someone clicks on the chosen link or button. -->\n<script>\nfunction gtag_report_conversion(url) {\n  var callback = function () {\n    if (typeof(url) != 'undefined') {\n      window.location = url;\n    }\n  };\n  gtag('event', 'conversion', {\n      'send_to': '${adwordsAccountId}/${conversionTrackingId}',\n      'value': 0.0,\n      'currency': 'USD',\n      'event_callback': callback\n  });\n  return false;\n}\n</script>\n`,
+          },
+          {
+            type: TrackingCodeType.WEBPAGE_ONCLICK,
+            pageFormat: TrackingCodePageFormat.AMP,
+            globalSiteTag: '<!-- Global site tag (gtag) - Google Ads: 741508461 -->\n<amp-analytics type="gtag" data-credentials="include">\n<script type="application/json">\n{\n  "vars": {\n    "gtag_id": "AW-741508461",\n    "config": {\n      "AW-741508461": {\n        "groups": "default"\n      }\n    }\n  },\n  "triggers": {\n  }\n}\n</script>\n</amp-analytics>\n',
+            eventSnippet: `\"C_dhkw47fQ3-A\": {\n  \"on\": \"click\",\n  \"selector\": \"CSS_SELECTOR\",\n  \"vars\": {\n    \"event_name\": \"conversion\",\n    \"value\": 0.0,\n    \"currency\": \"USD\",\n    \"send_to\": [\"${adwordsAccountId}/${conversionTrackingId}\"]\n  }\n}\n`,
+          },
+          {
+            type: TrackingCodeType.WEBPAGE,
+            pageFormat: TrackingCodePageFormat.HTML,
+            globalSiteTag: "<!-- Global site tag (gtag.js) - Google Ads: 741508461 -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=AW-741508461\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'AW-741508461');\n</script>\n",
+            eventSnippet: `<!-- Event snippet for gekko-25dc9f1dee9eebb8 conversion page -->\n<script>\n  gtag('event', 'conversion', {\n      'send_to': '${adwordsAccountId}/${conversionTrackingId}',\n      'value': 0.0,\n      'currency': 'USD'\n  });\n</script>\n`,
+          },
+          {
+            type: TrackingCodeType.WEBPAGE,
+            pageFormat: TrackingCodePageFormat.AMP,
+            globalSiteTag: '<!-- Global site tag (gtag) - Google Ads: 741508461 -->\n<amp-analytics type="gtag" data-credentials="include">\n<script type="application/json">\n{\n  "vars": {\n    "gtag_id": "AW-741508461",\n    "config": {\n      "AW-741508461": {\n        "groups": "default"\n      }\n    }\n  },\n  "triggers": {\n  }\n}\n</script>\n</amp-analytics>\n',
+            eventSnippet: `\"C_dhkw47fQ3-A\": {\n  \"on\": \"visible\",\n  \"vars\": {\n    \"event_name\": \"conversion\",\n    \"value\": 0.0,\n    \"currency\": \"USD\",\n    \"send_to\": [\"${adwordsAccountId}/${conversionTrackingId}\"]\n  }\n}\n`,
+          },
+        ];
+
+        return { tagSnippets };
       default:
         return {};
     }
