@@ -6,6 +6,7 @@ export namespace GoogleAds {
   export import resources = google.ads.googleads.v5.resources;
   export import enums = google.ads.googleads.v5.enums;
   export import common = google.ads.googleads.v5.common;
+  export import errors = google.ads.googleads.v5.errors;
 }
 
 export * from './client';

@@ -38,13 +38,12 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GoogleAdsClient = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
+exports.GaClientError = exports.GoogleAdsClient = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
 const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
 const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
-const error_parsing_interceptor_1 = require("./error-parsing-interceptor");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
 const services = google_proto_1.google.ads.googleads.v5.services;
@@ -67,14 +66,17 @@ class GoogleAdsClient {
     getRpcImpl(serviceName) {
         const sslCreds = grpc.credentials.createSsl();
         const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
-        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), {
-            interceptors: this.buildInterceptors(),
-        });
+        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds));
         const metadata = new grpc.Metadata();
         metadata.add('developer-token', this.options.developerToken);
         metadata.add('login-customer-id', this.options.mccAccountId);
         return function (method, requestData, callback) {
-            client.makeUnaryRequest(`/google.ads.googleads.v5.services.${serviceName}/` + method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, callback);
+            client.makeUnaryRequest(`/google.ads.googleads.v5.services.${serviceName}/` + method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, function (err, value) {
+                if (isServiceError(err)) {
+                    err = new GaClientError(err);
+                }
+                callback(err, value);
+            });
         };
     }
     async getFieldsForTable(tableName) {
@@ -179,12 +181,29 @@ class GoogleAdsClient {
         }
         throw new InvalidRPCServiceError(`Service with serviceName ${serviceName} does not support remote procedure calls`);
     }
-    buildInterceptors() {
-        const exceptionInterceptor = new error_parsing_interceptor_1.ExceptionInterceptor();
-        const interceptors = [
-            (options, nextCall) => exceptionInterceptor.intercept(options, nextCall),
-        ];
-        return interceptors;
-    }
 }
 exports.GoogleAdsClient = GoogleAdsClient;
+class GaClientError extends Error {
+    constructor(status) {
+        var _a, _b;
+        const failures = parseGoogleAdsErrorFromMetadata(status.metadata);
+        const failureObj = failures.length > 0 ? failures : status.details;
+        super(JSON.stringify(failureObj, null, 2));
+        this.details = this.message;
+        this.code = status.code;
+        this.metadata = status.metadata;
+        this.firstError = (_b = (_a = failures[0]) === null || _a === void 0 ? void 0 : _a.errors[0]) === null || _b === void 0 ? void 0 : _b.errorCode;
+    }
+}
+exports.GaClientError = GaClientError;
+const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
+function parseGoogleAdsErrorFromMetadata(metadata) {
+    if (!metadata) {
+        return [];
+    }
+    const failureArray = metadata.get(FAILURE_KEY);
+    return failureArray.map(bytes => google_proto_1.google.ads.googleads.v5.errors.GoogleAdsFailure.decode(bytes));
+}
+function isServiceError(err) {
+    return err && err.code && err.details && err.metadata;
+}

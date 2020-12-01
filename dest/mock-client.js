@@ -163,7 +163,7 @@ class MockGoogleAdsClient {
                 const resource = extract_1.flattern(obj);
                 const adwordsAccountId = `AW-RND_${customerId}`;
                 const conversionTrackingId = `RND_${resource.name}`;
-                let tagSnippets = [
+                const tagSnippets = [
                     {
                         type: TrackingCodeType.WEBPAGE_ONCLICK,
                         pageFormat: TrackingCodePageFormat.HTML,
@@ -189,7 +189,7 @@ class MockGoogleAdsClient {
                         eventSnippet: `\"C_dhkw47fQ3-A\": {\n  \"on\": \"visible\",\n  \"vars\": {\n    \"event_name\": \"conversion\",\n    \"value\": 0.0,\n    \"currency\": \"USD\",\n    \"send_to\": [\"${adwordsAccountId}/${conversionTrackingId}\"]\n  }\n}\n`,
                     },
                 ];
-                return { tagSnippets, };
+                return { tagSnippets };
             default:
                 return {};
         }

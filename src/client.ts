@@ -4,8 +4,9 @@ import { camelCase, snakeCase } from 'lodash';
 import * as $protobuf from 'protobufjs';
 
 import { google } from '../compiled/google-proto';
-import { ExceptionInterceptor, InterceptorMethod } from './error-parsing-interceptor';
 import { extract } from './extract';
+import { StatusObject } from '@grpc/grpc-js';
+import { Status } from '@grpc/grpc-js/build/src/constants';
 
 const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
 
@@ -64,9 +65,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const sslCreds = grpc.credentials.createSsl();
     const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
 
-    const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), {
-      interceptors: this.buildInterceptors(),
-    });
+    const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds));
 
     const metadata = new grpc.Metadata();
     metadata.add('developer-token', this.options.developerToken);
@@ -80,7 +79,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         requestData,
         metadata,
         {},
-        callback
+        function(err, value) {
+          if (isServiceError(err)) {
+            err = new GaClientError(err);
+          }
+          callback(err, value);
+        }
       );
     };
   }
@@ -219,15 +223,42 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       `Service with serviceName ${serviceName} does not support remote procedure calls`,
     );
   }
+}
 
-  private buildInterceptors(): InterceptorMethod[] {
-    const exceptionInterceptor = new ExceptionInterceptor();
+export class GaClientError extends Error implements StatusObject {
+  firstError: google.ads.googleads.v5.errors.IErrorCode | null | undefined;
+  code: Status;
+  details: string;
+  metadata: grpc.Metadata;
 
-    const interceptors: InterceptorMethod[] = [
-      (options: grpc.CallOptions, nextCall: (options: grpc.CallOptions) => grpc.InterceptingCall) =>
-        exceptionInterceptor.intercept(options, nextCall),
-    ];
+  constructor(status: grpc.ServiceError) {
+    const failures = parseGoogleAdsErrorFromMetadata(status.metadata);
+    const failureObj = failures.length > 0 ? failures : status.details;
 
-    return interceptors;
+    super(JSON.stringify(failureObj, null, 2));
+    this.details = this.message;
+
+    this.code = status.code;
+    this.metadata = status.metadata;
+
+    this.firstError = failures[0]?.errors[0]?.errorCode;
   }
+}
+
+const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
+
+function parseGoogleAdsErrorFromMetadata(
+  metadata: grpc.Metadata | undefined
+): google.ads.googleads.v5.errors.GoogleAdsFailure[] {
+  if (!metadata) {
+    return [];
+  }
+
+  const failureArray = metadata.get(FAILURE_KEY);
+
+  return failureArray.map(bytes => google.ads.googleads.v5.errors.GoogleAdsFailure.decode(bytes as any));
+}
+
+function isServiceError(err: any): err is grpc.ServiceError {
+  return err && err.code && err.details && err.metadata;
 }

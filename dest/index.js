@@ -19,6 +19,7 @@ var GoogleAds;
     GoogleAds.resources = google_proto_1.google.ads.googleads.v5.resources;
     GoogleAds.enums = google_proto_1.google.ads.googleads.v5.enums;
     GoogleAds.common = google_proto_1.google.ads.googleads.v5.common;
+    GoogleAds.errors = google_proto_1.google.ads.googleads.v5.errors;
 })(GoogleAds = exports.GoogleAds || (exports.GoogleAds = {}));
 __exportStar(require("./client"), exports);
 __exportStar(require("./extract"), exports);
