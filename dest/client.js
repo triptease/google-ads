@@ -45,10 +45,10 @@ const lodash_1 = require("lodash");
 const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
-const GOOGLE_ADS_ENDPOINT = 'googleads.googleapis.com:443';
-const services = google_proto_1.google.ads.googleads.v5.services;
-const resources = google_proto_1.google.ads.googleads.v5.resources;
-const Client = grpc.makeGenericClientConstructor({}, '', {});
+const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
+const services = google_proto_1.google.ads.googleads.v8.services;
+const resources = google_proto_1.google.ads.googleads.v8.resources;
+const Client = grpc.makeGenericClientConstructor({}, "", {});
 class ResourceNotFoundError extends Error {
 }
 exports.ResourceNotFoundError = ResourceNotFoundError;
@@ -68,8 +68,8 @@ class GoogleAdsClient {
         const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
         const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds));
         const metadata = new grpc.Metadata();
-        metadata.add('developer-token', this.options.developerToken);
-        metadata.add('login-customer-id', this.options.mccAccountId);
+        metadata.add("developer-token", this.options.developerToken);
+        metadata.add("login-customer-id", this.options.mccAccountId);
         return function (method, requestData, callback) {
             client.makeUnaryRequest(`/google.ads.googleads.v5.services.${serviceName}/` + method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, function (err, value) {
                 if (isServiceError(err)) {
@@ -81,18 +81,18 @@ class GoogleAdsClient {
     }
     async getFieldsForTable(tableName) {
         if (!this.fieldsCache) {
-            const fieldQueryService = await this.getService('GoogleAdsFieldService');
+            const fieldQueryService = await this.getService("GoogleAdsFieldService");
             const response = await fieldQueryService.searchGoogleAdsFields({
                 query: `SELECT name, selectable, category`,
             });
             this.fieldsCache = response.results
-                .map(field => extract_1.extract(field, ['name']))
-                .filter(field => field.selectable === true);
+                .map((field) => extract_1.extract(field, ["name"]))
+                .filter((field) => field.selectable === true);
         }
-        return this.fieldsCache.filter(f => f.name.startsWith(`${tableName}.`));
+        return this.fieldsCache.filter((f) => f.name.startsWith(`${tableName}.`));
     }
-    buildSearchSql(tableName, fields, filters = {}, orderBy, orderByDirection = 'ASC', limit) {
-        const fieldSql = fields.map(f => f.name).join(', ');
+    buildSearchSql(tableName, fields, filters = {}, orderBy, orderByDirection = "ASC", limit) {
+        const fieldSql = fields.map((f) => f.name).join(", ");
         const wheres = [];
         // tslint:disable-next-line:forin
         for (const filterName in filters) {
@@ -100,21 +100,23 @@ class GoogleAdsClient {
             if (!filterValue) {
                 continue;
             }
-            const filterValues = Array.isArray(filterValue) ? filterValue : [filterValue];
-            const quotedFilters = filterValues.map(filterValue => `"${filterValue}"`);
-            const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(',')})`;
+            const filterValues = Array.isArray(filterValue)
+                ? filterValue
+                : [filterValue];
+            const quotedFilters = filterValues.map((filterValue) => `"${filterValue}"`);
+            const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(",")})`;
             wheres.push(filterStatement);
         }
-        const wheresSql = wheres.join(' and ');
+        const wheresSql = wheres.join(" and ");
         return [
             `SELECT ${fieldSql}`,
             `FROM ${tableName}`,
-            `${wheresSql ? `WHERE ${wheresSql}` : ''}`,
-            `${orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ''}`,
-            `${limit ? `LIMIT ${limit}` : ''}`,
+            `${wheresSql ? `WHERE ${wheresSql}` : ""}`,
+            `${orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""}`,
+            `${limit ? `LIMIT ${limit}` : ""}`,
         ]
-            .filter(seg => !!seg)
-            .join(' ');
+            .filter((seg) => !!seg)
+            .join(" ");
     }
     async search(params) {
         var e_1, _a;
@@ -139,7 +141,7 @@ class GoogleAdsClient {
             const tableName = lodash_1.snakeCase(params.resource);
             const objName = lodash_1.camelCase(params.resource);
             const fields = yield __await(this.getFieldsForTable(tableName));
-            const queryService = yield __await(this.getService('GoogleAdsService'));
+            const queryService = yield __await(this.getService("GoogleAdsService"));
             let token = null;
             do {
                 const request = {
@@ -196,13 +198,13 @@ class GaClientError extends Error {
     }
 }
 exports.GaClientError = GaClientError;
-const FAILURE_KEY = 'google.ads.googleads.v5.errors.googleadsfailure-bin';
+const FAILURE_KEY = "google.ads.googleads.v5.errors.googleadsfailure-bin";
 function parseGoogleAdsErrorFromMetadata(metadata) {
     if (!metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map(bytes => google_proto_1.google.ads.googleads.v5.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v8.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;

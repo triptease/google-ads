@@ -10,12 +10,12 @@ const lodash_1 = require("lodash");
 const google_proto_1 = require("../compiled/google-proto");
 const client_1 = require("./client");
 const extract_1 = require("./extract");
-var TrackingCodeType = google_proto_1.google.ads.googleads.v5.enums.TrackingCodeTypeEnum.TrackingCodeType;
-var TrackingCodePageFormat = google_proto_1.google.ads.googleads.v5.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+var TrackingCodeType = google_proto_1.google.ads.googleads.v8.enums.TrackingCodeTypeEnum.TrackingCodeType;
+var TrackingCodePageFormat = google_proto_1.google.ads.googleads.v8.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 const hash32 = (str) => crypto_1.default
-    .createHash('md5')
+    .createHash("md5")
     .update(JSON.stringify(str))
-    .digest('hex')
+    .digest("hex")
     .substr(0, 32);
 function arrayify(v) {
     if (Array.isArray(v)) {
@@ -45,23 +45,25 @@ class MockGoogleAdsClient {
         this.idCounter = 1;
     }
     getMccAccountId() {
-        return 'mcc-123';
+        return "mcc-123";
     }
     makeMutator(resourceType) {
         return (options) => {
             const { operations, customerId } = options;
             operations.forEach((operation) => {
-                if ('create' in operation) {
-                    const obj = Object.assign(Object.assign(Object.assign({}, (operation.create.resourceName ? {} : this.getNewIdentifer(resourceType, customerId))), operation.create), this.getServerGeneratedOptions(resourceType, customerId, operation.create));
+                if ("create" in operation) {
+                    const obj = Object.assign(Object.assign(Object.assign({}, (operation.create.resourceName
+                        ? {}
+                        : this.getNewIdentifer(resourceType, customerId))), operation.create), this.getServerGeneratedOptions(resourceType, customerId, operation.create));
                     return (this.resources[resourceType][obj.resourceName] = obj);
                 }
-                else if ('update' in operation) {
+                else if ("update" in operation) {
                     return (this.resources[resourceType][operation.update.resourceName] = Object.assign(Object.assign({}, this.resources[resourceType][operation.update.resourceName]), operation.update));
                 }
-                else if ('remove' in operation) {
+                else if ("remove" in operation) {
                     return delete this.resources[resourceType][operation.remove];
                 }
-                throw new Error('No action');
+                throw new Error("No action");
             });
         };
     }
@@ -89,13 +91,13 @@ class MockGoogleAdsClient {
         if (serviceName in this.services) {
             return this.services[serviceName];
         }
-        if (serviceName === 'GoogleAdsService') {
+        if (serviceName === "GoogleAdsService") {
             this.services[serviceName] = {
                 mutate: jest_mock_1.default.fn((options) => {
                     const mutateOperations = options.mutateOperations;
                     mutateOperations.forEach((operation) => {
                         const resourceOpName = Object.keys(operation)[0];
-                        const resourceName = resourceOpName.substr(0, resourceOpName.length - 'Operation'.length);
+                        const resourceName = resourceOpName.substr(0, resourceOpName.length - "Operation".length);
                         const service = this.getService(`${resourceName}Service`);
                         service[`mutate${upperCaseFirstLetter(resourceName)}s`](Object.assign(Object.assign({}, options), { operations: [operation[resourceOpName]] }));
                     });
@@ -106,10 +108,10 @@ class MockGoogleAdsClient {
         const resourceName = upperCaseFirstLetter(serviceName.substr(0, serviceName.length - 7));
         this.resources[resourceName] = [];
         let additionMethods = {};
-        if (serviceName === 'CustomerService') {
+        if (serviceName === "CustomerService") {
             additionMethods = {
                 createCustomerClient: ({ customerId, customerClient }) => {
-                    const fullCustomer = Object.assign(Object.assign({}, this.getNewIdentifer('Customer', '')), customerClient);
+                    const fullCustomer = Object.assign(Object.assign({}, this.getNewIdentifer("Customer", "")), customerClient);
                     this.resources.CustomerClient = this.resources.CustomerClient || [];
                     this.resources.CustomerClient[fullCustomer.resourceName] = {
                         resourceName: fullCustomer.resourceName,
@@ -117,7 +119,8 @@ class MockGoogleAdsClient {
                         hidden: false,
                         level: 1,
                     };
-                    this.resources[resourceName][fullCustomer.resourceName] = fullCustomer;
+                    this.resources[resourceName][fullCustomer.resourceName] =
+                        fullCustomer;
                 },
             };
         }
@@ -125,10 +128,12 @@ class MockGoogleAdsClient {
         return this.services[serviceName];
     }
     async search(params) {
-        let resources = params.resource in this.resources ? Object.values(this.resources[params.resource]) : [];
+        let resources = params.resource in this.resources
+            ? Object.values(this.resources[params.resource])
+            : [];
         if (params.filters !== undefined) {
             resources = resources.filter((gResource) => {
-                const gResourceStringed = google_proto_1.google.ads.googleads.v5.resources[params.resource].toObject(gResource, {
+                const gResourceStringed = google_proto_1.google.ads.googleads.v8.resources[params.resource].toObject(gResource, {
                     enums: String,
                 });
                 const resource = extract_1.flattern(gResourceStringed);
@@ -152,14 +157,14 @@ class MockGoogleAdsClient {
         const id = this.idCounter++;
         return {
             id: { value: id },
-            resourceName: resourceName === 'Customer'
+            resourceName: resourceName === "Customer"
                 ? `customers/${id}`
                 : `customers/${customerId}/${loweCaseFirstLetter(resourceName)}s/${id}`,
         };
     }
     getServerGeneratedOptions(resourceName, customerId, obj) {
         switch (resourceName) {
-            case 'ConversionAction':
+            case "ConversionAction":
                 const resource = extract_1.flattern(obj);
                 const adwordsAccountId = `AW-RND_${customerId}`;
                 const conversionTrackingId = `RND_${resource.name}`;

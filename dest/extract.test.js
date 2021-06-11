@@ -6,17 +6,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const long_1 = __importDefault(require("long"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
-describe('fattern', () => {
-    it('should hoist objs value properties', () => {
+describe("fattern", () => {
+    it("should hoist objs value properties", () => {
         const result = extract_1.flattern({
-            resourceName: 'customers/123/campaigns/456',
+            resourceName: "customers/123/campaigns/456",
             id: {
                 value: 1758658058,
             },
             name: {
-                value: 'A Hotel',
+                value: "A Hotel",
             },
-            status: 'PAUSED',
+            status: "PAUSED",
             networkSettings: {
                 targetGoogleSearch: {
                     value: true,
@@ -25,7 +25,7 @@ describe('fattern', () => {
             targetingSetting: {
                 targetRestrictions: [
                     {
-                        targetingDimension: 'AUDIENCE',
+                        targetingDimension: "AUDIENCE",
                         bidOnly: {
                             value: true,
                         },
@@ -34,36 +34,36 @@ describe('fattern', () => {
             },
         });
         expect(result).toEqual({
-            resourceName: 'customers/123/campaigns/456',
+            resourceName: "customers/123/campaigns/456",
             id: 1758658058,
-            name: 'A Hotel',
-            status: 'PAUSED',
+            name: "A Hotel",
+            status: "PAUSED",
             networkSettings: {
                 targetGoogleSearch: true,
             },
             targetingSetting: {
                 targetRestrictions: [
                     {
-                        targetingDimension: 'AUDIENCE',
+                        targetingDimension: "AUDIENCE",
                         bidOnly: true,
                     },
                 ],
             },
         });
     });
-    test('extract should not mangle Long values', () => {
+    test("extract should not mangle Long values", () => {
         // create a simple protobuf object with a campaign id in it
         const id = long_1.default.fromNumber(12345);
-        const campaign = new google_proto_1.google.ads.googleads.v5.resources.Campaign({ id });
-        const row = new google_proto_1.google.ads.googleads.v5.services.GoogleAdsRow({ campaign });
-        const extractedRow = extract_1.extract(row, ['campaign']);
+        const campaign = new google_proto_1.google.ads.googleads.v8.resources.Campaign({ id });
+        const row = new google_proto_1.google.ads.googleads.v8.services.GoogleAdsRow({ campaign });
+        const extractedRow = extract_1.extract(row, ["campaign"]);
         expect(extractedRow.campaign.id).toBe(12345);
-        const extractedCampaign = extract_1.extract(extractedRow.campaign, ['id']);
+        const extractedCampaign = extract_1.extract(extractedRow.campaign, ["id"]);
         expect(extractedCampaign.id).toBe(12345);
     });
-    test('flattern should not mangle Long values', () => {
+    test("flattern should not mangle Long values", () => {
         const id = long_1.default.fromNumber(12345);
-        const campaign = new google_proto_1.google.ads.googleads.v5.resources.Campaign({ id });
+        const campaign = new google_proto_1.google.ads.googleads.v8.resources.Campaign({ id });
         const flattenedCampaign = extract_1.flattern(campaign);
         expect(flattenedCampaign.id).toEqual(12345);
         const reFlatternedCampaign = extract_1.flattern(flattenedCampaign);

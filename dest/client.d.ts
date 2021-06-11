@@ -1,12 +1,12 @@
-import { JWTOptions } from 'google-auth-library';
-import * as grpc from '@grpc/grpc-js';
-import { google } from '../compiled/google-proto';
-import { StatusObject } from '@grpc/grpc-js';
-import { Status } from '@grpc/grpc-js/build/src/constants';
-declare const services: typeof google.ads.googleads.v5.services;
+import { JWTOptions } from "google-auth-library";
+import * as grpc from "@grpc/grpc-js";
+import { google } from "../compiled/google-proto";
+import { StatusObject } from "@grpc/grpc-js";
+import { Status } from "@grpc/grpc-js/build/src/constants";
+declare const services: typeof google.ads.googleads.v8.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
-declare const resources: typeof google.ads.googleads.v5.resources;
+declare const resources: typeof google.ads.googleads.v8.resources;
 declare type resources = typeof resources;
 declare type resourceNames = keyof resources;
 export interface GoogleAdsClientOptions {
@@ -25,7 +25,7 @@ export interface ClientSearchParams<R extends resourceNames> {
         [attr in keyof InstanceType<resources[R]>]?: string | number | string[] | number[];
     };
     orderBy?: keyof InstanceType<resources[R]>;
-    orderByDirection?: 'ASC' | 'DESC';
+    orderByDirection?: "ASC" | "DESC";
     limit?: number;
 }
 export interface IGoogleAdsClient {
@@ -49,7 +49,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {
-    firstError: google.ads.googleads.v5.errors.IErrorCode | null | undefined;
+    firstError: google.ads.googleads.v8.errors.IErrorCode | null | undefined;
     code: Status;
     details: string;
     metadata: grpc.Metadata;

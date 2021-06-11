@@ -1,4 +1,4 @@
-import { ClientSearchParams, IGoogleAdsClient } from './client';
+import { ClientSearchParams, IGoogleAdsClient } from "./client";
 export declare class MockGoogleAdsClient implements IGoogleAdsClient {
     private services;
     private resources;
