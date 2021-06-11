@@ -4,7 +4,7 @@
   "main": "dest/index.js",
   "license": "MIT",
   "dependencies": {
-    "@grpc/grpc-js": "^1.1.7",
+    "@grpc/grpc-js": "^1.1.8",
     "@types/google-protobuf": "^3.2.7",
     "@types/jest": "^26.0.14",
     "@types/lodash": "^4.14.123",
