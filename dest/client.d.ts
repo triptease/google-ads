@@ -22,7 +22,9 @@ export interface ClientSearchParams<R extends resourceNames> {
     customerId: string;
     resource: R;
     filters?: {
-        [attr in keyof InstanceType<resources[R]>]?: string | number | string[] | number[];
+        [attr in keyof InstanceType<resources[R]>]?: string | number | string[] | number[] | {
+            raw: string;
+        };
     };
     orderBy?: keyof InstanceType<resources[R]>;
     orderByDirection?: "ASC" | "DESC";

@@ -46,6 +46,7 @@ const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
+const GOOGLE_ADS_VERSION = "v8";
 const services = google_proto_1.google.ads.googleads.v8.services;
 const resources = google_proto_1.google.ads.googleads.v8.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
@@ -71,7 +72,8 @@ class GoogleAdsClient {
         metadata.add("developer-token", this.options.developerToken);
         metadata.add("login-customer-id", this.options.mccAccountId);
         return function (method, requestData, callback) {
-            client.makeUnaryRequest(`/google.ads.googleads.v5.services.${serviceName}/` + method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, function (err, value) {
+            client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
+                method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, function (err, value) {
                 if (isServiceError(err)) {
                     err = new GaClientError(err);
                 }
@@ -87,7 +89,11 @@ class GoogleAdsClient {
             });
             this.fieldsCache = response.results
                 .map((field) => extract_1.extract(field, ["name"]))
-                .filter((field) => field.selectable === true);
+                .filter((field) => field.selectable === true)
+                .filter((field) => 
+            // Selecting this field will break the google ads api always remove it
+            field.name !==
+                "campaign_criterion.keyword_theme.free_form_keyword_theme");
         }
         return this.fieldsCache.filter((f) => f.name.startsWith(`${tableName}.`));
     }
@@ -100,12 +106,17 @@ class GoogleAdsClient {
             if (!filterValue) {
                 continue;
             }
-            const filterValues = Array.isArray(filterValue)
-                ? filterValue
-                : [filterValue];
-            const quotedFilters = filterValues.map((filterValue) => `"${filterValue}"`);
-            const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(",")})`;
-            wheres.push(filterStatement);
+            if (isRawFilterObject(filterValue)) {
+                wheres.push(`${tableName}.${lodash_1.snakeCase(filterName)} ${filterValue.raw}`);
+            }
+            else {
+                const filterValues = Array.isArray(filterValue)
+                    ? filterValue
+                    : [filterValue];
+                const quotedFilters = filterValues.map((filterValue) => `"${filterValue}"`);
+                const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(",")})`;
+                wheres.push(filterStatement);
+            }
         }
         const wheresSql = wheres.join(" and ");
         return [
@@ -198,7 +209,7 @@ class GaClientError extends Error {
     }
 }
 exports.GaClientError = GaClientError;
-const FAILURE_KEY = "google.ads.googleads.v5.errors.googleadsfailure-bin";
+const FAILURE_KEY = `google.ads.googleads.${GOOGLE_ADS_VERSION}.errors.googleadsfailure-bin`;
 function parseGoogleAdsErrorFromMetadata(metadata) {
     if (!metadata) {
         return [];
@@ -208,4 +219,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;
+}
+function isRawFilterObject(obj) {
+    return obj.hasOwnProperty("raw");
 }

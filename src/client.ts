@@ -9,6 +9,7 @@ import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
+const GOOGLE_ADS_VERSION = "v8";
 
 const services = google.ads.googleads.v8.services;
 type services = typeof services;
@@ -37,7 +38,8 @@ export interface ClientSearchParams<R extends resourceNames> {
       | string
       | number
       | string[]
-      | number[];
+      | number[]
+      | { raw: string };
   };
   orderBy?: keyof InstanceType<resources[R]>;
   orderByDirection?: "ASC" | "DESC";
@@ -83,7 +85,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     return function (method, requestData, callback) {
       client.makeUnaryRequest(
-        `/google.ads.googleads.v5.services.${serviceName}/` + method.name,
+        `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
+          method.name,
         (value: Uint8Array) => Buffer.from(value),
         (value: Buffer) => value,
         requestData,
@@ -111,7 +114,13 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
       this.fieldsCache = response.results
         .map((field) => extract(field, ["name"]))
-        .filter((field) => field.selectable === true);
+        .filter((field) => field.selectable === true)
+        .filter(
+          (field) =>
+            // Selecting this field will break the google ads api always remove it
+            field.name !==
+            "campaign_criterion.keyword_theme.free_form_keyword_theme"
+        );
     }
 
     return this.fieldsCache.filter((f) => f.name.startsWith(`${tableName}.`));
@@ -121,7 +130,13 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     tableName: string,
     fields: Array<{ name: string }>,
     filters: {
-      [col: string]: string | number | string[] | number[] | undefined;
+      [col: string]:
+        | string
+        | number
+        | string[]
+        | number[]
+        | undefined
+        | { raw: string };
     } = {},
     orderBy: string | undefined,
     orderByDirection: "ASC" | "DESC" = "ASC",
@@ -137,20 +152,26 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       if (!filterValue) {
         continue;
       }
-      const filterValues = Array.isArray(filterValue)
-        ? filterValue
-        : [filterValue];
 
-      const quotedFilters = filterValues.map(
-        (filterValue) => `"${filterValue}"`
-      );
-      const filterStatement = `${tableName}.${snakeCase(
-        filterName
-      )} in (${quotedFilters.join(",")})`;
-      wheres.push(filterStatement);
+      if (isRawFilterObject(filterValue)) {
+        wheres.push(`${tableName}.${snakeCase(filterName)} ${filterValue.raw}`);
+      } else {
+        const filterValues = Array.isArray(filterValue)
+          ? filterValue
+          : [filterValue];
+
+        const quotedFilters = filterValues.map(
+          (filterValue) => `"${filterValue}"`
+        );
+        const filterStatement = `${tableName}.${snakeCase(
+          filterName
+        )} in (${quotedFilters.join(",")})`;
+        wheres.push(filterStatement);
+      }
     }
 
     const wheresSql = wheres.join(" and ");
+
     return [
       `SELECT ${fieldSql}`,
       `FROM ${tableName}`,
@@ -273,7 +294,7 @@ export class GaClientError extends Error implements StatusObject {
   }
 }
 
-const FAILURE_KEY = "google.ads.googleads.v5.errors.googleadsfailure-bin";
+const FAILURE_KEY = `google.ads.googleads.${GOOGLE_ADS_VERSION}.errors.googleadsfailure-bin`;
 
 function parseGoogleAdsErrorFromMetadata(
   metadata: grpc.Metadata | undefined
@@ -291,4 +312,8 @@ function parseGoogleAdsErrorFromMetadata(
 
 function isServiceError(err: any): err is grpc.ServiceError {
   return err && err.code && err.details && err.metadata;
+}
+
+function isRawFilterObject(obj: any): obj is { raw: string } {
+  return obj.hasOwnProperty("raw");
 }

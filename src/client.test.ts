@@ -18,6 +18,7 @@ function buildMockGetServices(pages: number = 1) {
           results: [
             { name: "campaign.status", selectable: true },
             { name: "campaign.count", selectable: false },
+            { name: "change_status.last_change_date_time", selectable: true },
           ],
           totalResultsCount: 1000,
         } as Partial<google.ads.googleads.v8.services.SearchGoogleAdsFieldsResponse>;
@@ -157,6 +158,28 @@ describe("GoogleAdsClient", () => {
         pageToken: null,
         query:
           'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED") ORDER BY campaign.status DESC LIMIT 300',
+      });
+    });
+
+    it("should be able to do complex conditions", async () => {
+      const client = new GoogleAdsClient(settings);
+      const services = buildMockGetServices();
+      client.getService = services;
+
+      await client.search({
+        customerId: "123",
+        resource: "ChangeStatus",
+        filters: {
+          lastChangeDateTime: { raw: `> "2020-01-01"` },
+        },
+      });
+
+      expect(services.GoogleAdsService.search).toBeCalledWith({
+        customerId: "123",
+        pageSize: 1000,
+        pageToken: null,
+        query:
+          'SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"',
       });
     });
 
