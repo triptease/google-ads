@@ -152,7 +152,6 @@ class GoogleAdsClient {
             const tableName = lodash_1.snakeCase(params.resource);
             const objName = lodash_1.camelCase(params.resource);
             const fields = yield __await(this.getFieldsForTable(tableName));
-            const queryService = yield __await(this.getService("GoogleAdsService"));
             let token = null;
             do {
                 const request = {
@@ -161,7 +160,10 @@ class GoogleAdsClient {
                     pageToken: token,
                     pageSize: 1000,
                 };
-                const result = yield __await(queryService.search(request));
+                if (!this.googleAdsService) {
+                    this.googleAdsService = this.getService("GoogleAdsService");
+                }
+                const result = yield __await(this.googleAdsService.search(request));
                 token = result.nextPageToken;
                 for (const field of result.results) {
                     yield yield __await(field[objName]);

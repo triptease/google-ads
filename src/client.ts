@@ -2,7 +2,6 @@ import { JWT, JWTOptions, OAuth2Client } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
 import { camelCase, snakeCase } from "lodash";
 import * as $protobuf from "protobufjs";
-
 import { google } from "../compiled/google-proto";
 import { extract } from "./extract";
 import { StatusObject } from "@grpc/grpc-js";
@@ -61,6 +60,9 @@ export interface IGoogleAdsClient {
 
 export class GoogleAdsClient implements IGoogleAdsClient {
   private auth: OAuth2Client;
+  private googleAdsService:
+    | google.ads.googleads.v8.services.GoogleAdsService
+    | undefined;
 
   constructor(private options: GoogleAdsClientOptions) {
     this.auth = new JWT(this.options.authOptions);
@@ -188,10 +190,11 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public async search<R extends resourceNames>(
     params: ClientSearchParams<R>
   ): Promise<Array<InstanceType<resources[R]>>> {
-    const results = [];
+    const results: Array<InstanceType<resources[R]>> = [];
     for await (const x of this.searchGenerator(params)) {
       results.push(x);
     }
+
     return results;
   }
 
@@ -201,7 +204,6 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
     const fields = await this.getFieldsForTable(tableName);
-    const queryService = await this.getService("GoogleAdsService");
     let token: string | null = null;
 
     do {
@@ -218,7 +220,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         pageToken: token,
         pageSize: 1000,
       };
-      const result = await queryService.search(request);
+
+      if (!this.googleAdsService) {
+        this.googleAdsService = this.getService("GoogleAdsService");
+      }
+
+      const result = await this.googleAdsService.search(request);
 
       token = result.nextPageToken as string;
 
