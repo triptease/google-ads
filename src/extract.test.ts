@@ -1,10 +1,10 @@
 import Long from "long";
 import { google } from "../compiled/google-proto";
-import { extract, flattern } from "./extract";
+import { extract, flatten } from "./extract";
 
-describe("fattern", () => {
+describe("flatten", () => {
   it("should hoist objs value properties", () => {
-    const result = flattern({
+    const result = flatten({
       resourceName: "customers/123/campaigns/456",
       id: {
         value: 1758658058,
@@ -63,14 +63,14 @@ describe("fattern", () => {
     expect(extractedCampaign.id).toBe(12345);
   });
 
-  test("flattern should not mangle Long values", () => {
+  test("flatten should not mangle Long values", () => {
     const id = Long.fromNumber(12345);
     const campaign = new google.ads.googleads.v8.resources.Campaign({ id });
 
-    const flattenedCampaign = flattern(campaign);
+    const flattenedCampaign = flatten(campaign);
     expect(flattenedCampaign.id).toEqual(12345);
 
-    const reFlatternedCampaign = flattern(flattenedCampaign);
-    expect(reFlatternedCampaign.id).toEqual(12345);
+    const reFlattenedCampaign = flatten(flattenedCampaign);
+    expect(reFlattenedCampaign.id).toEqual(12345);
   });
 });

@@ -3,13 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extract = exports.flattern = void 0;
+exports.extract = exports.flatten = void 0;
 const lodash_1 = __importDefault(require("lodash"));
 const long_1 = __importDefault(require("long"));
 function longToNumber(value) {
     return parseInt(value.toString(), 10);
 }
-function flattern(obj) {
+function flatten(obj) {
     const anyObj = obj;
     if (anyObj instanceof Object && 'value' in anyObj) {
         if (long_1.default.isLong(anyObj.value)) {
@@ -21,21 +21,21 @@ function flattern(obj) {
         return longToNumber(anyObj);
     }
     if (lodash_1.default.isArray(anyObj)) {
-        return anyObj.map(flattern);
+        return anyObj.map(flatten);
     }
     if (anyObj instanceof Object) {
         const newObj = {};
         Object.setPrototypeOf(newObj, Object.getPrototypeOf(anyObj));
         lodash_1.default.forOwn(anyObj, (fieldValue, fieldName) => {
-            newObj[fieldName] = flattern(fieldValue);
+            newObj[fieldName] = flatten(fieldValue);
         });
         return newObj;
     }
     return anyObj;
 }
-exports.flattern = flattern;
+exports.flatten = flatten;
 function extract(obj, requiredFields = []) {
-    const flatObject = flattern(obj);
+    const flatObject = flatten(obj);
     requiredFields.forEach(field => {
         const realValue = field in flatObject ? flatObject[field] : undefined;
         if (realValue == null || realValue === undefined) {

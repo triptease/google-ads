@@ -88,7 +88,7 @@ class GoogleAdsClient {
                 query: `SELECT name, selectable, category`,
             });
             this.fieldsCache = response.results
-                .map((field) => extract_1.extract(field, ["name"]))
+                .map((field) => (0, extract_1.extract)(field, ["name"]))
                 .filter((field) => field.selectable === true)
                 .filter((field) => 
             // Selecting this field will break the google ads api always remove it
@@ -107,14 +107,14 @@ class GoogleAdsClient {
                 continue;
             }
             if (isRawFilterObject(filterValue)) {
-                wheres.push(`${tableName}.${lodash_1.snakeCase(filterName)} ${filterValue.raw}`);
+                wheres.push(`${tableName}.${(0, lodash_1.snakeCase)(filterName)} ${filterValue.raw}`);
             }
             else {
                 const filterValues = Array.isArray(filterValue)
                     ? filterValue
                     : [filterValue];
                 const quotedFilters = filterValues.map((filterValue) => `"${filterValue}"`);
-                const filterStatement = `${tableName}.${lodash_1.snakeCase(filterName)} in (${quotedFilters.join(",")})`;
+                const filterStatement = `${tableName}.${(0, lodash_1.snakeCase)(filterName)} in (${quotedFilters.join(",")})`;
                 wheres.push(filterStatement);
             }
         }
@@ -149,14 +149,14 @@ class GoogleAdsClient {
     }
     searchGenerator(params) {
         return __asyncGenerator(this, arguments, function* searchGenerator_1() {
-            const tableName = lodash_1.snakeCase(params.resource);
-            const objName = lodash_1.camelCase(params.resource);
+            const tableName = (0, lodash_1.snakeCase)(params.resource);
+            const objName = (0, lodash_1.camelCase)(params.resource);
             const fields = yield __await(this.getFieldsForTable(tableName));
             let token = null;
             do {
                 const request = {
                     customerId: params.customerId,
-                    query: this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? lodash_1.snakeCase(params.orderBy) : undefined, params.orderByDirection, params.limit),
+                    query: this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit),
                     pageToken: token,
                     pageSize: 1000,
                 };
@@ -173,7 +173,7 @@ class GoogleAdsClient {
         });
     }
     async findOne(customerId, resource, resourceId) {
-        const resourceName = `customers/${customerId}/${lodash_1.camelCase(resource)}s/${resourceId}`;
+        const resourceName = `customers/${customerId}/${(0, lodash_1.camelCase)(resource)}s/${resourceId}`;
         const results = await this.search({
             customerId,
             resource,

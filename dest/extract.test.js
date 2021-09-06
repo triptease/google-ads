@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const long_1 = __importDefault(require("long"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
-describe("fattern", () => {
+describe("flatten", () => {
     it("should hoist objs value properties", () => {
-        const result = extract_1.flattern({
+        const result = (0, extract_1.flatten)({
             resourceName: "customers/123/campaigns/456",
             id: {
                 value: 1758658058,
@@ -56,17 +56,17 @@ describe("fattern", () => {
         const id = long_1.default.fromNumber(12345);
         const campaign = new google_proto_1.google.ads.googleads.v8.resources.Campaign({ id });
         const row = new google_proto_1.google.ads.googleads.v8.services.GoogleAdsRow({ campaign });
-        const extractedRow = extract_1.extract(row, ["campaign"]);
+        const extractedRow = (0, extract_1.extract)(row, ["campaign"]);
         expect(extractedRow.campaign.id).toBe(12345);
-        const extractedCampaign = extract_1.extract(extractedRow.campaign, ["id"]);
+        const extractedCampaign = (0, extract_1.extract)(extractedRow.campaign, ["id"]);
         expect(extractedCampaign.id).toBe(12345);
     });
-    test("flattern should not mangle Long values", () => {
+    test("flatten should not mangle Long values", () => {
         const id = long_1.default.fromNumber(12345);
         const campaign = new google_proto_1.google.ads.googleads.v8.resources.Campaign({ id });
-        const flattenedCampaign = extract_1.flattern(campaign);
+        const flattenedCampaign = (0, extract_1.flatten)(campaign);
         expect(flattenedCampaign.id).toEqual(12345);
-        const reFlatternedCampaign = extract_1.flattern(flattenedCampaign);
-        expect(reFlatternedCampaign.id).toEqual(12345);
+        const reFlattenedCampaign = (0, extract_1.flatten)(flattenedCampaign);
+        expect(reFlattenedCampaign.id).toEqual(12345);
     });
 });

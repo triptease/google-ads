@@ -7,7 +7,7 @@ import {
   IGoogleAdsClient,
   ResourceNotFoundError,
 } from "./client";
-import { flattern } from "./extract";
+import { flatten } from "./extract";
 
 import ITagSnippet = google.ads.googleads.v8.common.ITagSnippet;
 import TrackingCodeType = google.ads.googleads.v8.enums.TrackingCodeTypeEnum.TrackingCodeType;
@@ -197,7 +197,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
         ].toObject(gResource, {
           enums: String,
         });
-        const resource = flattern(gResourceStringed);
+        const resource = flatten(gResourceStringed);
 
         if (params.filters !== undefined) {
           for (const filterKey of Object.keys(params.filters)) {
@@ -239,7 +239,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
   ) {
     switch (resourceName) {
       case "ConversionAction":
-        const resource = flattern(obj);
+        const resource = flatten(obj);
         const adwordsAccountId = `AW-RND_${customerId}`;
         const conversionTrackingId = `RND_${resource.name}`;
         const tagSnippets: ITagSnippet[] = [

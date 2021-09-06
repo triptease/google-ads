@@ -73,7 +73,7 @@ class MockGoogleAdsClient {
         };
     }
     async findOne(customerId, resource, resourceId) {
-        const resourceName = `customers/${customerId}/${lodash_1.camelCase(resource)}s/${resourceId}`;
+        const resourceName = `customers/${customerId}/${(0, lodash_1.camelCase)(resource)}s/${resourceId}`;
         const results = await this.search({
             customerId,
             resource,
@@ -136,7 +136,7 @@ class MockGoogleAdsClient {
                 const gResourceStringed = google_proto_1.google.ads.googleads.v8.resources[params.resource].toObject(gResource, {
                     enums: String,
                 });
-                const resource = extract_1.flattern(gResourceStringed);
+                const resource = (0, extract_1.flatten)(gResourceStringed);
                 if (params.filters !== undefined) {
                     for (const filterKey of Object.keys(params.filters)) {
                         const filterValues = arrayify(params.filters[filterKey]);
@@ -165,7 +165,7 @@ class MockGoogleAdsClient {
     getServerGeneratedOptions(resourceName, customerId, obj) {
         switch (resourceName) {
             case "ConversionAction":
-                const resource = extract_1.flattern(obj);
+                const resource = (0, extract_1.flatten)(obj);
                 const adwordsAccountId = `AW-RND_${customerId}`;
                 const conversionTrackingId = `RND_${resource.name}`;
                 const tagSnippets = [
