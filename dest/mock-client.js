@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MockGoogleAdsClient = void 0;
 const crypto_1 = __importDefault(require("crypto"));
-const jest_mock_1 = __importDefault(require("jest-mock"));
 const lodash_1 = require("lodash");
 const google_proto_1 = require("../compiled/google-proto");
 const client_1 = require("./client");
@@ -93,7 +92,7 @@ class MockGoogleAdsClient {
         }
         if (serviceName === "GoogleAdsService") {
             this.services[serviceName] = {
-                mutate: jest_mock_1.default.fn((options) => {
+                mutate: jest.fn((options) => {
                     const mutateOperations = options.mutateOperations;
                     mutateOperations.forEach((operation) => {
                         const resourceOpName = Object.keys(operation)[0];
@@ -124,7 +123,7 @@ class MockGoogleAdsClient {
                 },
             };
         }
-        this.services[serviceName] = Object.assign({ [`mutate${resourceName}s`]: jest_mock_1.default.fn(this.makeMutator(resourceName)), [`get${resourceName}`]: jest_mock_1.default.fn(this.makeGetter(resourceName)) }, additionMethods);
+        this.services[serviceName] = Object.assign({ [`mutate${resourceName}s`]: jest.fn(this.makeMutator(resourceName)), [`get${resourceName}`]: jest.fn(this.makeGetter(resourceName)) }, additionMethods);
         return this.services[serviceName];
     }
     async search(params) {

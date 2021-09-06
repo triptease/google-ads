@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import jestMock from "jest-mock";
 import { camelCase } from "lodash";
 import { google } from "../compiled/google-proto";
 import {
@@ -126,7 +125,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
 
     if (serviceName === "GoogleAdsService") {
       this.services[serviceName] = {
-        mutate: jestMock.fn((options: any) => {
+        mutate: jest.fn((options: any) => {
           const mutateOperations = options.mutateOperations;
           mutateOperations.forEach((operation: any) => {
             const resourceOpName = Object.keys(operation)[0];
@@ -176,8 +175,8 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
     }
 
     this.services[serviceName] = {
-      [`mutate${resourceName}s`]: jestMock.fn(this.makeMutator(resourceName)),
-      [`get${resourceName}`]: jestMock.fn(this.makeGetter(resourceName)),
+      [`mutate${resourceName}s`]: jest.fn(this.makeMutator(resourceName)),
+      [`get${resourceName}`]: jest.fn(this.makeGetter(resourceName)),
       ...additionMethods,
     };
 
