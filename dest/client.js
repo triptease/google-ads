@@ -59,6 +59,8 @@ exports.InvalidRPCServiceError = InvalidRPCServiceError;
 class GoogleAdsClient {
     constructor(options) {
         this.options = options;
+        // Service creation leaks memory, so services are cached and re-used.
+        this.serviceCache = {};
         this.auth = new google_auth_library_1.JWT(this.options.authOptions);
     }
     getMccAccountId() {
@@ -83,7 +85,7 @@ class GoogleAdsClient {
     }
     async getFieldsForTable(tableName) {
         if (!this.fieldsCache) {
-            const fieldQueryService = await this.getService("GoogleAdsFieldService");
+            const fieldQueryService = this.getService("GoogleAdsFieldService");
             const response = await fieldQueryService.searchGoogleAdsFields({
                 query: `SELECT name, selectable, category`,
             });
@@ -154,9 +156,10 @@ class GoogleAdsClient {
             const fields = yield __await(this.getFieldsForTable(tableName));
             let token = null;
             do {
+                const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit);
                 const request = {
                     customerId: params.customerId,
-                    query: this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit),
+                    query,
                     pageToken: token,
                     pageSize: 1000,
                 };
@@ -185,16 +188,20 @@ class GoogleAdsClient {
         if (results.length > 0) {
             return results[0];
         }
-        throw new ResourceNotFoundError(`Resource ${resource} with resourceName ${resourceName} for cusomterId ${customerId} does not exist`);
+        throw new ResourceNotFoundError(`Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`);
     }
     getService(serviceName) {
-        const constructor = services[serviceName];
-        if (constructor.prototype instanceof $protobuf.rpc.Service) {
-            const rpcServiceConstructor = constructor;
-            const rpcImplementation = this.getRpcImpl(serviceName);
-            return new rpcServiceConstructor(rpcImplementation);
+        if (this.serviceCache[serviceName]) {
+            return this.serviceCache[serviceName];
         }
-        throw new InvalidRPCServiceError(`Service with serviceName ${serviceName} does not support remote procedure calls`);
+        const rpcServiceConstructor = services[serviceName];
+        if (!(rpcServiceConstructor.prototype instanceof $protobuf.rpc.Service)) {
+            throw new InvalidRPCServiceError(`Service with serviceName ${serviceName} does not support remote procedure calls`);
+        }
+        const rpcImplementation = this.getRpcImpl(serviceName);
+        const service = new rpcServiceConstructor(rpcImplementation);
+        this.serviceCache[serviceName] = service;
+        return service;
     }
 }
 exports.GoogleAdsClient = GoogleAdsClient;

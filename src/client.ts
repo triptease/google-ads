@@ -58,11 +58,15 @@ export interface IGoogleAdsClient {
   getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 
+type ServiceCache = Partial<{ [K in serviceNames]: InstanceType<services[K]> }>;
+
 export class GoogleAdsClient implements IGoogleAdsClient {
   private auth: OAuth2Client;
   private googleAdsService:
     | google.ads.googleads.v8.services.GoogleAdsService
     | undefined;
+  // Service creation leaks memory, so services are cached and re-used.
+  private serviceCache: ServiceCache = {};
 
   constructor(private options: GoogleAdsClientOptions) {
     this.auth = new JWT(this.options.authOptions);
@@ -109,7 +113,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     | Array<extract<google.ads.googleads.v8.resources.IGoogleAdsField, "name">>;
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
-      const fieldQueryService = await this.getService("GoogleAdsFieldService");
+      const fieldQueryService = this.getService("GoogleAdsFieldService");
       const response = await fieldQueryService.searchGoogleAdsFields({
         query: `SELECT name, selectable, category`,
       });
@@ -207,16 +211,18 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     let token: string | null = null;
 
     do {
+      const query = this.buildSearchSql(
+        tableName,
+        fields,
+        params.filters,
+        params.orderBy ? snakeCase(params.orderBy as string) : undefined,
+        params.orderByDirection,
+        params.limit
+      );
+
       const request = {
         customerId: params.customerId,
-        query: this.buildSearchSql(
-          tableName,
-          fields,
-          params.filters,
-          params.orderBy ? snakeCase(params.orderBy as string) : undefined,
-          params.orderByDirection,
-          params.limit
-        ),
+        query,
         pageToken: token,
         pageSize: 1000,
       };
@@ -258,26 +264,30 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     }
 
     throw new ResourceNotFoundError(
-      `Resource ${resource} with resourceName ${resourceName} for cusomterId ${customerId} does not exist`
+      `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
     );
   }
 
   public getService<T extends serviceNames>(
     serviceName: T
   ): InstanceType<services[T]> {
-    const constructor = services[serviceName];
-
-    if (constructor.prototype instanceof $protobuf.rpc.Service) {
-      const rpcServiceConstructor = constructor as typeof $protobuf.rpc.Service;
-      const rpcImplementation = this.getRpcImpl(serviceName);
-      return new rpcServiceConstructor(rpcImplementation) as InstanceType<
-        services[T]
-      >;
+    if (this.serviceCache[serviceName]) {
+      return this.serviceCache[serviceName] as InstanceType<services[T]>;
     }
 
-    throw new InvalidRPCServiceError(
-      `Service with serviceName ${serviceName} does not support remote procedure calls`
-    );
+    const rpcServiceConstructor = services[serviceName];
+
+    if (!(rpcServiceConstructor.prototype instanceof $protobuf.rpc.Service)) {
+      throw new InvalidRPCServiceError(
+        `Service with serviceName ${serviceName} does not support remote procedure calls`
+      );
+    }
+
+    const rpcImplementation = this.getRpcImpl(serviceName);
+    const service = new rpcServiceConstructor(rpcImplementation);
+
+    this.serviceCache[serviceName] = service as ServiceCache[T];
+    return service as InstanceType<services[T]>;
   }
 }
 

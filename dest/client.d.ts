@@ -40,6 +40,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     private options;
     private auth;
     private googleAdsService;
+    private serviceCache;
     constructor(options: GoogleAdsClientOptions);
     getMccAccountId(): string;
     private getRpcImpl;
