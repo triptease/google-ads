@@ -62,9 +62,6 @@ type ServiceCache = Partial<{ [K in serviceNames]: InstanceType<services[K]> }>;
 
 export class GoogleAdsClient implements IGoogleAdsClient {
   private auth: OAuth2Client;
-  private googleAdsService:
-    | google.ads.googleads.v8.services.GoogleAdsService
-    | undefined;
   // Service creation leaks memory, so services are cached and re-used.
   private serviceCache: ServiceCache = {};
 
@@ -208,6 +205,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
     const fields = await this.getFieldsForTable(tableName);
+    const googleAdsService = this.getService("GoogleAdsService");
     let token: string | null = null;
 
     do {
@@ -227,11 +225,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         pageSize: 1000,
       };
 
-      if (!this.googleAdsService) {
-        this.googleAdsService = this.getService("GoogleAdsService");
-      }
-
-      const result = await this.googleAdsService.search(request);
+      const result = await googleAdsService.search(request);
 
       token = result.nextPageToken as string;
 

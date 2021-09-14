@@ -9,11 +9,11 @@
     "@types/lodash": "^4.14.172",
     "@types/long": "^4.0.1",
     "google-auth-library": "^7.9.1",
-    "jest": "^27.1.0",
+    "jest": "^27.2.0",
     "lodash": "^4.17.21",
     "protobufjs": "^6.11.2",
     "ts-jest": "^27.0.5",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.3"
   },
   "scripts": {
     "build": "./compile-lib.sh && yarn tsc",
