@@ -24,6 +24,7 @@ export interface GoogleAdsClientOptions {
   authOptions: JWTOptions;
   developerToken: string;
   mccAccountId: string;
+  timeout?: number;
 }
 
 export class ResourceNotFoundError extends Error {}
@@ -61,11 +62,13 @@ export interface IGoogleAdsClient {
 type ServiceCache = Partial<{ [K in serviceNames]: InstanceType<services[K]> }>;
 
 export class GoogleAdsClient implements IGoogleAdsClient {
-  private auth: OAuth2Client;
+  private readonly auth: OAuth2Client;
+  private readonly options: GoogleAdsClientOptions;
   // Service creation leaks memory, so services are cached and re-used.
-  private serviceCache: ServiceCache = {};
+  private readonly serviceCache: ServiceCache = {};
 
-  constructor(private options: GoogleAdsClientOptions) {
+  constructor(options: GoogleAdsClientOptions) {
+    this.options = options;
     this.auth = new JWT(this.options.authOptions);
   }
 
@@ -86,6 +89,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     metadata.add("developer-token", this.options.developerToken);
     metadata.add("login-customer-id", this.options.mccAccountId);
 
+    const timeout = this.options?.timeout;
+
     return function (method, requestData, callback) {
       client.makeUnaryRequest(
         `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
@@ -94,7 +99,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         (value: Buffer) => value,
         requestData,
         metadata,
-        {},
+        {
+          deadline: timeout ? Date.now() + timeout : undefined,
+        },
         function (err, value) {
           if (isServiceError(err)) {
             err = new GaClientError(err);

@@ -13,6 +13,7 @@ export interface GoogleAdsClientOptions {
     authOptions: JWTOptions;
     developerToken: string;
     mccAccountId: string;
+    timeout?: number;
 }
 export declare class ResourceNotFoundError extends Error {
 }
@@ -37,9 +38,9 @@ export interface IGoogleAdsClient {
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GoogleAdsClient implements IGoogleAdsClient {
-    private options;
-    private auth;
-    private serviceCache;
+    private readonly auth;
+    private readonly options;
+    private readonly serviceCache;
     constructor(options: GoogleAdsClientOptions);
     getMccAccountId(): string;
     private getRpcImpl;

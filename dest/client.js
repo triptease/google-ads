@@ -58,24 +58,28 @@ class InvalidRPCServiceError extends Error {
 exports.InvalidRPCServiceError = InvalidRPCServiceError;
 class GoogleAdsClient {
     constructor(options) {
-        this.options = options;
         // Service creation leaks memory, so services are cached and re-used.
         this.serviceCache = {};
+        this.options = options;
         this.auth = new google_auth_library_1.JWT(this.options.authOptions);
     }
     getMccAccountId() {
         return this.options.mccAccountId;
     }
     getRpcImpl(serviceName) {
+        var _a;
         const sslCreds = grpc.credentials.createSsl();
         const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
         const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds));
         const metadata = new grpc.Metadata();
         metadata.add("developer-token", this.options.developerToken);
         metadata.add("login-customer-id", this.options.mccAccountId);
+        const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
         return function (method, requestData, callback) {
             client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
-                method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {}, function (err, value) {
+                method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {
+                deadline: timeout ? Date.now() + timeout : undefined,
+            }, function (err, value) {
                 if (isServiceError(err)) {
                     err = new GaClientError(err);
                 }
