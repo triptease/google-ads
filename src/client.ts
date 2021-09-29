@@ -80,9 +80,14 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const sslCreds = grpc.credentials.createSsl();
     const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
 
+    const serviceConfig = {
+      loadBalancingConfig: [{ round_robin: {} }],
+    };
+
     const client = new Client(
       GOOGLE_ADS_ENDPOINT,
-      grpc.credentials.combineChannelCredentials(sslCreds, googleCreds)
+      grpc.credentials.combineChannelCredentials(sslCreds, googleCreds),
+      { "grpc.service_config": JSON.stringify(serviceConfig) }
     );
 
     const metadata = new grpc.Metadata();

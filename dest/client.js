@@ -70,7 +70,10 @@ class GoogleAdsClient {
         var _a;
         const sslCreds = grpc.credentials.createSsl();
         const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
-        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds));
+        const serviceConfig = {
+            loadBalancingConfig: [{ round_robin: {} }],
+        };
+        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), { "grpc.service_config": JSON.stringify(serviceConfig) });
         const metadata = new grpc.Metadata();
         metadata.add("developer-token", this.options.developerToken);
         metadata.add("login-customer-id", this.options.mccAccountId);
