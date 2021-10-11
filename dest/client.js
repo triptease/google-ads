@@ -45,7 +45,6 @@ const lodash_1 = require("lodash");
 const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
-const generic_pool_1 = require("generic-pool");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v8";
 const services = google_proto_1.google.ads.googleads.v8.services;
@@ -74,30 +73,16 @@ class GoogleAdsClient {
         const serviceConfig = {
             loadBalancingConfig: [{ round_robin: {} }],
         };
-        const factory = {
-            create: async function () {
-                return new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), { "grpc.service_config": JSON.stringify(serviceConfig) });
-            },
-            destroy: async function (client) {
-                client.close();
-            }
-        };
-        const opts = {
-            max: 20,
-            min: 1
-        };
-        const clientPool = (0, generic_pool_1.createPool)(factory, opts);
+        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), { "grpc.service_config": JSON.stringify(serviceConfig) });
         const metadata = new grpc.Metadata();
         metadata.add("developer-token", this.options.developerToken);
         metadata.add("login-customer-id", this.options.mccAccountId);
         const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
-        return async function (method, requestData, callback) {
-            const client = await clientPool.acquire();
+        return function (method, requestData, callback) {
             client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
                 method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
-                clientPool.release(client);
                 if (isServiceError(err)) {
                     err = new GaClientError(err);
                 }
