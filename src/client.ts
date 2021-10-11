@@ -6,6 +6,8 @@ import { google } from "../compiled/google-proto";
 import { extract } from "./extract";
 import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
+import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { createPool, Factory } from "generic-pool";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v8";
@@ -84,11 +86,24 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       loadBalancingConfig: [{ round_robin: {} }],
     };
 
-    const client = new Client(
-      GOOGLE_ADS_ENDPOINT,
-      grpc.credentials.combineChannelCredentials(sslCreds, googleCreds),
-      { "grpc.service_config": JSON.stringify(serviceConfig) }
-    );
+    const factory: Factory<ServiceClient> = {
+      create: async function() {
+        return new Client(
+          GOOGLE_ADS_ENDPOINT,
+          grpc.credentials.combineChannelCredentials(sslCreds, googleCreds),
+          { "grpc.service_config": JSON.stringify(serviceConfig) }
+        );
+      },
+      destroy: async function(client: ServiceClient) {
+        client.close();
+      }
+    };
+    const opts = {
+      max: 20,
+      min: 1
+    };
+    
+    const clientPool = createPool(factory, opts);
 
     const metadata = new grpc.Metadata();
     metadata.add("developer-token", this.options.developerToken);
@@ -96,7 +111,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     const timeout = this.options?.timeout;
 
-    return function (method, requestData, callback) {
+    return async function (method, requestData, callback) {
+      const client = await clientPool.acquire();
       client.makeUnaryRequest(
         `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
           method.name,
@@ -108,6 +124,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           deadline: timeout ? Date.now() + timeout : undefined,
         },
         function (err, value) {
+          clientPool.release(client);
           if (isServiceError(err)) {
             err = new GaClientError(err);
           }
