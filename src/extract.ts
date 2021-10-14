@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import Long from 'long';
+import { isArray, forOwn } from "lodash";
+import Long from "long";
 
 type Primitives = string | number | undefined | null | Long;
 type CastPrimitive<V> = V extends Long ? number : V;
@@ -22,9 +22,9 @@ function longToNumber(value: Long): number {
 export function flatten<T>(obj: T): MapReturnType<T> {
   const anyObj = obj as any;
 
-  if (anyObj instanceof Object && 'value' in anyObj) {
+  if (anyObj instanceof Object && "value" in anyObj) {
     if (Long.isLong(anyObj.value)) {
-      return longToNumber(anyObj.value) as any
+      return longToNumber(anyObj.value) as any;
     }
     return anyObj.value;
   }
@@ -33,7 +33,7 @@ export function flatten<T>(obj: T): MapReturnType<T> {
     return longToNumber(anyObj) as any;
   }
 
-  if (_.isArray(anyObj)) {
+  if (isArray(anyObj)) {
     return anyObj.map(flatten) as any;
   }
 
@@ -41,7 +41,7 @@ export function flatten<T>(obj: T): MapReturnType<T> {
     const newObj = {} as any;
     Object.setPrototypeOf(newObj, Object.getPrototypeOf(anyObj));
 
-    _.forOwn(anyObj, (fieldValue, fieldName) => {
+    forOwn(anyObj, (fieldValue, fieldName) => {
       newObj[fieldName] = flatten(fieldValue);
     });
 
@@ -54,17 +54,21 @@ export function flatten<T>(obj: T): MapReturnType<T> {
 type Diff<T, U> = T extends U ? never : T;
 type NonNullable<T> = Diff<T, null | undefined>;
 
-type Require<Obj, Req extends keyof Obj | void> = { [P in Exclude<keyof Obj, Req>]?: Obj[P] } &
-  { [P in Extract<keyof Obj, Req>]-?: NonNullable<Obj[P]> };
+type Require<Obj, Req extends keyof Obj | void> = {
+  [P in Exclude<keyof Obj, Req>]?: Obj[P];
+} & { [P in Extract<keyof Obj, Req>]-?: NonNullable<Obj[P]> };
 
-export type extract<T, F extends keyof T | void = void> = Require<FlattenExtractObject<T>, F>;
+export type extract<T, F extends keyof T | void = void> = Require<
+  FlattenExtractObject<T>,
+  F
+>;
 export function extract<T, F extends keyof T | void = void>(
   obj: T,
   requiredFields: F[] = []
 ): Require<FlattenExtractObject<T>, F> {
   const flatObject: any = flatten(obj);
 
-  requiredFields.forEach(field => {
+  requiredFields.forEach((field) => {
     const realValue = field in flatObject ? flatObject[field] : undefined;
 
     if (realValue == null || realValue === undefined) {
@@ -72,5 +76,5 @@ export function extract<T, F extends keyof T | void = void>(
     }
   });
 
-  return (flatObject as any) as Require<FlattenExtractObject<T>, F>;
+  return flatObject as any as Require<FlattenExtractObject<T>, F>;
 }

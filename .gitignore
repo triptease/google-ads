@@ -1,2 +1,11 @@
 node_modules
 googleapis
+
+# Yarn ignores for non-zero-install config
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/releases
+!**/.yarn/plugins
+!**/.yarn/sdks
+!**/.yarn/versions
+**/.pnp.*

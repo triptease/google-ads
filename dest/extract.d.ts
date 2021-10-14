@@ -1,4 +1,4 @@
-import Long from 'long';
+import Long from "long";
 declare type Primitives = string | number | undefined | null | Long;
 declare type CastPrimitive<V> = V extends Long ? number : V;
 declare type MapReturnType<X> = X extends Primitives ? CastPrimitive<X> : X extends {
