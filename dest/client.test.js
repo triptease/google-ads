@@ -46,6 +46,25 @@ function buildMockGetServices(pages = 1) {
     };
     return Object.assign(getServices, mockServices);
 }
+describe("ClientPool", () => {
+    it("should balance requests across the client pool", () => {
+        let clientIndex = 0;
+        const mockClientCreator = () => {
+            let localIndex = clientIndex++;
+            // Mocking `close` as it has no params so the test is neater -
+            // we don't care what it actually does.
+            return { close: () => localIndex };
+        };
+        const clientPool = new client_1.ClientPool({}, 2, mockClientCreator);
+        const client1 = clientPool.getClient();
+        const client2 = clientPool.getClient();
+        const client3 = clientPool.getClient();
+        expect(client1.close()).toStrictEqual(0);
+        expect(client2.close()).toStrictEqual(1);
+        // The pool has two clients so this should have wrapped back around
+        expect(client3.close()).toStrictEqual(0);
+    });
+});
 describe("GoogleAdsClient", () => {
     describe("findOne", () => {
         it("should produce SQL to search", async () => {

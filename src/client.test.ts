@@ -1,5 +1,12 @@
+import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { OAuth2Client } from "google-auth-library";
 import { google } from "../compiled/google-proto";
-import { GoogleAdsClient, ResourceNotFoundError } from "./client";
+import {
+  ClientCreator,
+  ClientPool,
+  GoogleAdsClient,
+  ResourceNotFoundError,
+} from "./client";
 
 const settings = {
   developerToken: "dev-toke",
@@ -50,6 +57,33 @@ function buildMockGetServices(pages: number = 1) {
 
   return Object.assign(getServices, mockServices);
 }
+
+describe("ClientPool", () => {
+  it("should balance requests across the client pool", () => {
+    let clientIndex = 0;
+    const mockClientCreator: ClientCreator = () => {
+      let localIndex = clientIndex++;
+      // Mocking `close` as it has no params so the test is neater -
+      // we don't care what it actually does.
+      return { close: () => localIndex } as unknown as ServiceClient;
+    };
+
+    const clientPool = new ClientPool(
+      {} as unknown as OAuth2Client,
+      2,
+      mockClientCreator
+    );
+
+    const client1 = clientPool.getClient();
+    const client2 = clientPool.getClient();
+    const client3 = clientPool.getClient();
+
+    expect(client1.close()).toStrictEqual(0);
+    expect(client2.close()).toStrictEqual(1);
+    // The pool has two clients so this should have wrapped back around
+    expect(client3.close()).toStrictEqual(0);
+  });
+});
 
 describe("GoogleAdsClient", () => {
   describe("findOne", () => {

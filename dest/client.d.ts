@@ -1,8 +1,9 @@
-import { JWTOptions } from "google-auth-library";
+import { JWTOptions, OAuth2Client } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
 import { google } from "../compiled/google-proto";
 import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
+import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 declare const services: typeof google.ads.googleads.v8.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
@@ -14,6 +15,7 @@ export interface GoogleAdsClientOptions {
     developerToken: string;
     mccAccountId: string;
     timeout?: number;
+    clientPoolSize?: number;
 }
 export declare class ResourceNotFoundError extends Error {
 }
@@ -37,10 +39,27 @@ export interface IGoogleAdsClient {
     findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
+export interface ClientCreator {
+    (channelCredentials: grpc.ChannelCredentials, callCredentials: grpc.CallCredentials, serviceConfig: string): ServiceClient;
+}
+/**
+ * A very simple round-robin pool for gRPC clients. This is needed for meta since we run
+ * a very large number of concurrent requests which try and multiplex over a single Channel
+ * that gets overwhelmed and hangs. This provides a dumb mechanism to spread that load
+ * across a pool of clients, who each manage a single Channel per scheme/host/port.
+ */
+export declare class ClientPool {
+    private readonly size;
+    private readonly pool;
+    private currentIndex;
+    constructor(auth: OAuth2Client, size?: number, clientCreator?: ClientCreator);
+    getClient(): ServiceClient;
+}
 export declare class GoogleAdsClient implements IGoogleAdsClient {
-    private readonly auth;
     private readonly options;
     private readonly serviceCache;
+    private readonly metadata;
+    private readonly clientPool;
     constructor(options: GoogleAdsClientOptions);
     getMccAccountId(): string;
     private getRpcImpl;

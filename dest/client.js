@@ -38,7 +38,7 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GaClientError = exports.GoogleAdsClient = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
+exports.GaClientError = exports.GoogleAdsClient = exports.ClientPool = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
 const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
@@ -56,31 +56,58 @@ exports.ResourceNotFoundError = ResourceNotFoundError;
 class InvalidRPCServiceError extends Error {
 }
 exports.InvalidRPCServiceError = InvalidRPCServiceError;
+const defaultClientCreator = (channelCredentials, callCredentials, serviceConfig) => new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(channelCredentials, callCredentials), { "grpc.service_config": serviceConfig });
+/**
+ * A very simple round-robin pool for gRPC clients. This is needed for meta since we run
+ * a very large number of concurrent requests which try and multiplex over a single Channel
+ * that gets overwhelmed and hangs. This provides a dumb mechanism to spread that load
+ * across a pool of clients, who each manage a single Channel per scheme/host/port.
+ */
+class ClientPool {
+    constructor(auth, size = 1, clientCreator = defaultClientCreator) {
+        this.size = size;
+        this.pool = [];
+        this.currentIndex = 0;
+        if (size <= 0)
+            throw new Error("Client pool size must be bigger than 0");
+        const channelCredentials = grpc.credentials.createSsl();
+        const callCredentials = grpc.credentials.createFromGoogleCredential(auth);
+        const serviceConfig = JSON.stringify({
+            loadBalancingConfig: [{ round_robin: {} }],
+        });
+        for (let i = 0; i < size; i++) {
+            const client = clientCreator(channelCredentials, callCredentials, serviceConfig);
+            this.pool.push(client);
+        }
+    }
+    getClient() {
+        if (this.currentIndex === this.size) {
+            this.currentIndex = 0;
+        }
+        return this.pool[this.currentIndex++];
+    }
+}
+exports.ClientPool = ClientPool;
 class GoogleAdsClient {
     constructor(options) {
         // Service creation leaks memory, so services are cached and re-used.
         this.serviceCache = {};
         this.options = options;
-        this.auth = new google_auth_library_1.JWT(this.options.authOptions);
+        this.metadata = new grpc.Metadata();
+        this.metadata.add("developer-token", this.options.developerToken);
+        this.metadata.add("login-customer-id", this.options.mccAccountId);
+        const auth = new google_auth_library_1.JWT(this.options.authOptions);
+        this.clientPool = new ClientPool(auth, this.options.clientPoolSize);
     }
     getMccAccountId() {
         return this.options.mccAccountId;
     }
     getRpcImpl(serviceName) {
         var _a;
-        const sslCreds = grpc.credentials.createSsl();
-        const googleCreds = grpc.credentials.createFromGoogleCredential(this.auth);
-        const serviceConfig = {
-            loadBalancingConfig: [{ round_robin: {} }],
-        };
-        const client = new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(sslCreds, googleCreds), { "grpc.service_config": JSON.stringify(serviceConfig) });
-        const metadata = new grpc.Metadata();
-        metadata.add("developer-token", this.options.developerToken);
-        metadata.add("login-customer-id", this.options.mccAccountId);
         const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
-        return function (method, requestData, callback) {
-            client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/` +
-                method.name, (value) => Buffer.from(value), (value) => value, requestData, metadata, {
+        return (method, requestData, callback) => {
+            const client = this.clientPool.getClient();
+            client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
                 if (isServiceError(err)) {
