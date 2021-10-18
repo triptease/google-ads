@@ -1,4 +1,4 @@
-import { JWTOptions, OAuth2Client } from "google-auth-library";
+import { JWTOptions } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
 import { google } from "../compiled/google-proto";
 import { StatusObject } from "@grpc/grpc-js";
@@ -52,7 +52,7 @@ export declare class ClientPool {
     private readonly size;
     private readonly pool;
     private currentIndex;
-    constructor(auth: OAuth2Client, size?: number, clientCreator?: ClientCreator);
+    constructor(authOptions: JWTOptions, size?: number, clientCreator?: ClientCreator);
     getClient(): ServiceClient;
 }
 export declare class GoogleAdsClient implements IGoogleAdsClient {

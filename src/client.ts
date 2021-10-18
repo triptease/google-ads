@@ -96,20 +96,22 @@ export class ClientPool {
   private currentIndex = 0;
 
   constructor(
-    auth: OAuth2Client,
+    authOptions: JWTOptions,
     private readonly size: number = 1,
     clientCreator: ClientCreator = defaultClientCreator
   ) {
     if (size <= 0) throw new Error("Client pool size must be bigger than 0");
 
     const channelCredentials = grpc.credentials.createSsl();
-    const callCredentials = grpc.credentials.createFromGoogleCredential(auth);
-
     const serviceConfig = JSON.stringify({
       loadBalancingConfig: [{ round_robin: {} }],
     });
 
     for (let i = 0; i < size; i++) {
+      // Creating a new Google auth object for each client (should) force them not to share channels
+      const auth = new JWT(authOptions);
+      const callCredentials = grpc.credentials.createFromGoogleCredential(auth);
+
       const client = clientCreator(
         channelCredentials,
         callCredentials,
@@ -142,8 +144,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     this.metadata.add("developer-token", this.options.developerToken);
     this.metadata.add("login-customer-id", this.options.mccAccountId);
 
-    const auth = new JWT(this.options.authOptions);
-    this.clientPool = new ClientPool(auth, this.options.clientPoolSize);
+    this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
   }
 
   public getMccAccountId(): string {

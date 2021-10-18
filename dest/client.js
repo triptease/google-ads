@@ -64,18 +64,20 @@ const defaultClientCreator = (channelCredentials, callCredentials, serviceConfig
  * across a pool of clients, who each manage a single Channel per scheme/host/port.
  */
 class ClientPool {
-    constructor(auth, size = 1, clientCreator = defaultClientCreator) {
+    constructor(authOptions, size = 1, clientCreator = defaultClientCreator) {
         this.size = size;
         this.pool = [];
         this.currentIndex = 0;
         if (size <= 0)
             throw new Error("Client pool size must be bigger than 0");
         const channelCredentials = grpc.credentials.createSsl();
-        const callCredentials = grpc.credentials.createFromGoogleCredential(auth);
         const serviceConfig = JSON.stringify({
             loadBalancingConfig: [{ round_robin: {} }],
         });
         for (let i = 0; i < size; i++) {
+            // Creating a new Google auth object for each client (should) force them not to share channels
+            const auth = new google_auth_library_1.JWT(authOptions);
+            const callCredentials = grpc.credentials.createFromGoogleCredential(auth);
             const client = clientCreator(channelCredentials, callCredentials, serviceConfig);
             this.pool.push(client);
         }
@@ -96,8 +98,7 @@ class GoogleAdsClient {
         this.metadata = new grpc.Metadata();
         this.metadata.add("developer-token", this.options.developerToken);
         this.metadata.add("login-customer-id", this.options.mccAccountId);
-        const auth = new google_auth_library_1.JWT(this.options.authOptions);
-        this.clientPool = new ClientPool(auth, this.options.clientPoolSize);
+        this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
     }
     getMccAccountId() {
         return this.options.mccAccountId;
