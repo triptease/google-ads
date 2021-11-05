@@ -82,8 +82,7 @@ const defaultClientCreator: ClientCreator = (
       channelCredentials,
       callCredentials
     ),
-    // Channelz tracing is only disabled to keep memory usage down
-    { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 }
+    { "grpc.service_config": serviceConfig }
   );
 
 /**
