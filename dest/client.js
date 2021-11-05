@@ -56,7 +56,7 @@ exports.ResourceNotFoundError = ResourceNotFoundError;
 class InvalidRPCServiceError extends Error {
 }
 exports.InvalidRPCServiceError = InvalidRPCServiceError;
-const defaultClientCreator = (channelCredentials, callCredentials, serviceConfig) => new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(channelCredentials, callCredentials), { "grpc.service_config": serviceConfig });
+const defaultClientCreator = (channelCredentials, callCredentials, serviceConfig) => new Client(GOOGLE_ADS_ENDPOINT, grpc.credentials.combineChannelCredentials(channelCredentials, callCredentials), { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 });
 /**
  * A very simple round-robin pool for gRPC clients. This is needed for meta since we run
  * a very large number of concurrent requests which try and multiplex over a single Channel

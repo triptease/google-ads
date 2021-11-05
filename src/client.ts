@@ -82,7 +82,7 @@ const defaultClientCreator: ClientCreator = (
       channelCredentials,
       callCredentials
     ),
-    { "grpc.service_config": serviceConfig }
+    { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 }
   );
 
 /**
