@@ -82,7 +82,8 @@ const defaultClientCreator: ClientCreator = (
       channelCredentials,
       callCredentials
     ),
-    { "grpc.service_config": serviceConfig }
+    // Channelz tracing is only disabled to keep memory usage down
+    { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 }
   );
 
 /**
@@ -144,7 +145,10 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     this.metadata.add("developer-token", this.options.developerToken);
     this.metadata.add("login-customer-id", this.options.mccAccountId);
 
-    this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
+    this.clientPool = new ClientPool(
+      this.options.authOptions,
+      this.options.clientPoolSize
+    );
   }
 
   public getMccAccountId(): string {
