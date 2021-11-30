@@ -37,8 +37,12 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function reject(value) { resume("throw", value); }
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GaClientError = exports.GoogleAdsClient = exports.ClientPool = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
+const sqlstring_1 = __importDefault(require("sqlstring"));
 const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
@@ -150,9 +154,10 @@ class GoogleAdsClient {
                 const filterValues = Array.isArray(filterValue)
                     ? filterValue
                     : [filterValue];
-                const quotedFilters = filterValues.map((filterValue) => `"${filterValue}"`);
-                const filterStatement = `${tableName}.${(0, lodash_1.snakeCase)(filterName)} in (${quotedFilters.join(",")})`;
-                wheres.push(filterStatement);
+                const quotedFilters = filterValues.map((filterValue) => sqlstring_1.default.escape(filterValue));
+                const tableFieldName = `${tableName}.${(0, lodash_1.snakeCase)(filterName)}`;
+                const conditional = quotedFilters.length === 1 ? ` = ${quotedFilters[0]}` : ` in (${quotedFilters.join(",")})`;
+                wheres.push(tableFieldName + conditional);
             }
         }
         const wheresSql = wheres.join(" and ");

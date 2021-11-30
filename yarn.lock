@@ -909,6 +909,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/sqlstring@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "@types/sqlstring@npm:2.3.0"
+  checksum: 8f180c7bc0a34f9ce20be44fa8bc962ad402519a29c6e0309db39ed82f5f201c57ca03fbd5f15abb065496e88624adb9740200f77157661f090374fe4c23084d
+  languageName: node
+  linkType: hard
+
 "@types/stack-utils@npm:^2.0.0":
   version: 2.0.1
   resolution: "@types/stack-utils@npm:2.0.1"
@@ -2004,11 +2011,13 @@ fsevents@^2.3.2:
     "@types/jest": ^27.0.2
     "@types/lodash": ^4.14.176
     "@types/long": ^4.0.1
+    "@types/sqlstring": ^2.3.0
     google-auth-library: ^7.10.2
     jest: ^27.3.1
     lodash: ^4.17.21
     prettier: ^2.4.1
     protobufjs: ^6.11.2
+    sqlstring: ^2.3.2
     ts-jest: ^27.0.7
     typescript: ^4.4.4
   languageName: unknown
@@ -3894,6 +3903,13 @@ resolve@^1.20.0:
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
   checksum: 19d79aec211f09b99ec3099b5b2ae2f6e9cdefe50bc91ac4c69144b6d3928a640bb6ae5b3def70c2e85a2c3d9f5ec2719921e3a59d3ca3ef4b2fd1a4656a0df3
+  languageName: node
+  linkType: hard
+
+"sqlstring@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "sqlstring@npm:2.3.2"
+  checksum: 6d17a604dcf724046ff0f0dec562164fc217968e7a962e6ed6cca6ae8d8cd7b264c595627fe74d485200274ad8913f88d4fb9e75469d0305b1a647492b7168e0
   languageName: node
   linkType: hard
 

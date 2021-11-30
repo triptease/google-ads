@@ -25,7 +25,7 @@ export interface ClientSearchParams<R extends resourceNames> {
     customerId: string;
     resource: R;
     filters?: {
-        [attr in keyof InstanceType<resources[R]>]?: string | number | string[] | number[] | {
+        [attr in keyof InstanceType<resources[R]>]?: boolean | string | number | string[] | number[] | {
             raw: string;
         };
     };

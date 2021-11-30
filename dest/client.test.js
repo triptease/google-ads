@@ -18,6 +18,7 @@ function buildMockGetServices(pages = 1) {
                     results: [
                         { name: "campaign.status", selectable: true },
                         { name: "campaign.count", selectable: false },
+                        { name: "campaign_budget.name", selectable: true },
                         { name: "change_status.last_change_date_time", selectable: true },
                     ],
                     totalResultsCount: 1000,
@@ -79,7 +80,7 @@ describe("GoogleAdsClient", () => {
                 customerId: "123",
                 pageSize: 1000,
                 pageToken: null,
-                query: 'SELECT campaign.status FROM campaign WHERE campaign.resource_name in ("customers/123/campaigns/456")',
+                query: `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
             });
         });
         it("should throw an error if no resource is found", async () => {
@@ -110,7 +111,7 @@ describe("GoogleAdsClient", () => {
                 customerId: "123",
                 pageSize: 1000,
                 pageToken: null,
-                query: 'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED","PAUSED") and campaign.name in ("test")',
+                query: `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
             });
         });
         it("should produce SQL basic", async () => {
@@ -147,7 +148,43 @@ describe("GoogleAdsClient", () => {
                 customerId: "123",
                 pageSize: 1000,
                 pageToken: null,
-                query: 'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED") ORDER BY campaign.status DESC LIMIT 300',
+                query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' ORDER BY campaign.status DESC LIMIT 300`,
+            });
+        });
+        it("should produce SQL  and escale quotes", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.search({
+                customerId: "123",
+                resource: "Campaign",
+                filters: {
+                    name: `'Sneaky' \\'Hacks\\'`,
+                }
+            });
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: `SELECT campaign.status FROM campaign WHERE campaign.name = '\\'Sneaky\\' \\\\\\'Hacks\\\\\\''`,
+            });
+        });
+        it("should produce SQL with booleans", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.search({
+                customerId: "123",
+                resource: "CampaignBudget",
+                filters: {
+                    explicitlyShared: true,
+                },
+            });
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: 'SELECT campaign_budget.name FROM campaign_budget WHERE campaign_budget.explicitly_shared = true',
             });
         });
         it("should be able to do complex conditions", async () => {
@@ -165,7 +202,7 @@ describe("GoogleAdsClient", () => {
                 customerId: "123",
                 pageSize: 1000,
                 pageToken: null,
-                query: 'SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"',
+                query: `SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"`,
             });
         });
         it("should return expected values from search", async () => {
@@ -193,7 +230,7 @@ describe("GoogleAdsClient", () => {
                 },
             });
             expect(services.GoogleAdsService.search).toBeCalledWith(expect.objectContaining({
-                query: 'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED") and campaign.resource_name in ("1234")',
+                query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
             }));
         });
         it("should return all results if paginated", async () => {

@@ -1,6 +1,7 @@
+import SqlString from 'sqlstring';
 import { JWT, JWTOptions, OAuth2Client } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import { camelCase, snakeCase } from "lodash";
+import _, { camelCase, snakeCase } from "lodash";
 import * as $protobuf from "protobufjs";
 import { google } from "../compiled/google-proto";
 import { extract } from "./extract";
@@ -37,6 +38,7 @@ export interface ClientSearchParams<R extends resourceNames> {
   resource: R;
   filters?: {
     [attr in keyof InstanceType<resources[R]>]?:
+      | boolean
       | string
       | number
       | string[]
@@ -207,6 +209,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     fields: Array<{ name: string }>,
     filters: {
       [col: string]:
+        | boolean
         | string
         | number
         | string[]
@@ -237,12 +240,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           : [filterValue];
 
         const quotedFilters = filterValues.map(
-          (filterValue) => `"${filterValue}"`
+          (filterValue) => SqlString.escape(filterValue)
         );
-        const filterStatement = `${tableName}.${snakeCase(
-          filterName
-        )} in (${quotedFilters.join(",")})`;
-        wheres.push(filterStatement);
+        const tableFieldName = `${tableName}.${snakeCase(filterName)}`;
+
+        const conditional = quotedFilters.length === 1 ? ` = ${quotedFilters[0]}` : ` in (${quotedFilters.join(",")})`;
+        wheres.push(tableFieldName + conditional);
       }
     }
 

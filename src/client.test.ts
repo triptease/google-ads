@@ -25,6 +25,7 @@ function buildMockGetServices(pages: number = 1) {
           results: [
             { name: "campaign.status", selectable: true },
             { name: "campaign.count", selectable: false },
+            { name: "campaign_budget.name", selectable: true },
             { name: "change_status.last_change_date_time", selectable: true },
           ],
           totalResultsCount: 1000,
@@ -47,7 +48,7 @@ function buildMockGetServices(pages: number = 1) {
     } as Partial<google.ads.googleads.v8.services.GoogleAdsService>,
   };
 
-  const getServices = (serviceName: string) => {
+  const getServices = (serviceName: any) => {
     if (serviceName in mockServices) {
       return (mockServices as any)[serviceName];
     }
@@ -105,7 +106,7 @@ describe("GoogleAdsClient", () => {
         pageSize: 1000,
         pageToken: null,
         query:
-          'SELECT campaign.status FROM campaign WHERE campaign.resource_name in ("customers/123/campaigns/456")',
+          `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
       });
     });
 
@@ -147,7 +148,7 @@ describe("GoogleAdsClient", () => {
         pageSize: 1000,
         pageToken: null,
         query:
-          'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED","PAUSED") and campaign.name in ("test")',
+          `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
       });
     });
 
@@ -191,7 +192,53 @@ describe("GoogleAdsClient", () => {
         pageSize: 1000,
         pageToken: null,
         query:
-          'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED") ORDER BY campaign.status DESC LIMIT 300',
+          `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' ORDER BY campaign.status DESC LIMIT 300`,
+      });
+    });
+
+
+    it("should produce SQL  and escale quotes", async () => {
+      const client = new GoogleAdsClient(settings);
+      const services = buildMockGetServices();
+      client.getService = services;
+
+      await client.search({
+        customerId: "123",
+        resource: "Campaign",
+        filters: {
+          name: `'Sneaky' \\'Hacks\\'`,
+        }
+      });
+
+      expect(services.GoogleAdsService.search).toBeCalledWith({
+        customerId: "123",
+        pageSize: 1000,
+        pageToken: null,
+        query:
+          `SELECT campaign.status FROM campaign WHERE campaign.name = '\\'Sneaky\\' \\\\\\'Hacks\\\\\\''`,
+      });
+    });
+
+
+    it("should produce SQL with booleans", async () => {
+      const client = new GoogleAdsClient(settings);
+      const services = buildMockGetServices();
+      client.getService = services;
+
+      await client.search({
+        customerId: "123",
+        resource: "CampaignBudget",
+        filters: {
+          explicitlyShared: true,
+        },
+      });
+
+      expect(services.GoogleAdsService.search).toBeCalledWith({
+        customerId: "123",
+        pageSize: 1000,
+        pageToken: null,
+        query:
+          'SELECT campaign_budget.name FROM campaign_budget WHERE campaign_budget.explicitly_shared = true',
       });
     });
 
@@ -213,7 +260,7 @@ describe("GoogleAdsClient", () => {
         pageSize: 1000,
         pageToken: null,
         query:
-          'SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"',
+          `SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"`,
       });
     });
 
@@ -249,7 +296,7 @@ describe("GoogleAdsClient", () => {
       expect(services.GoogleAdsService.search).toBeCalledWith(
         expect.objectContaining({
           query:
-            'SELECT campaign.status FROM campaign WHERE campaign.status in ("ENABLED") and campaign.resource_name in ("1234")',
+            `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
         })
       );
     });
