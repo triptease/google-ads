@@ -29,9 +29,9 @@ function buildMockGetServices(pages: number = 1) {
             { name: "change_status.last_change_date_time", selectable: true },
           ],
           totalResultsCount: 1000,
-        } as Partial<google.ads.googleads.v8.services.SearchGoogleAdsFieldsResponse>;
+        } as Partial<google.ads.googleads.v9.services.SearchGoogleAdsFieldsResponse>;
       }),
-    } as Partial<google.ads.googleads.v8.services.GoogleAdsFieldService>,
+    } as Partial<google.ads.googleads.v9.services.GoogleAdsFieldService>,
 
     GoogleAdsService: {
       search: jest.fn(async () => {
@@ -43,9 +43,9 @@ function buildMockGetServices(pages: number = 1) {
               campaign: { name: "foo " + pageNumber },
             },
           ],
-        } as Partial<google.ads.googleads.v8.services.SearchGoogleAdsResponse>;
+        } as Partial<google.ads.googleads.v9.services.SearchGoogleAdsResponse>;
       }),
-    } as Partial<google.ads.googleads.v8.services.GoogleAdsService>,
+    } as Partial<google.ads.googleads.v9.services.GoogleAdsService>,
   };
 
   const getServices = (serviceName: any) => {
@@ -322,7 +322,7 @@ describe("GoogleAdsClient", () => {
       const client = new GoogleAdsClient(settings);
       const service = client.getService("CampaignService");
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v8.services.CampaignService
+        google.ads.googleads.v9.services.CampaignService
       );
     });
   });

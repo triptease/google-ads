@@ -15,11 +15,11 @@ const google_proto_1 = require("../compiled/google-proto");
 var GoogleAds;
 (function (GoogleAds) {
     GoogleAds.protobuf = google_proto_1.google.protobuf;
-    GoogleAds.services = google_proto_1.google.ads.googleads.v8.services;
-    GoogleAds.resources = google_proto_1.google.ads.googleads.v8.resources;
-    GoogleAds.enums = google_proto_1.google.ads.googleads.v8.enums;
-    GoogleAds.common = google_proto_1.google.ads.googleads.v8.common;
-    GoogleAds.errors = google_proto_1.google.ads.googleads.v8.errors;
+    GoogleAds.services = google_proto_1.google.ads.googleads.v9.services;
+    GoogleAds.resources = google_proto_1.google.ads.googleads.v9.resources;
+    GoogleAds.enums = google_proto_1.google.ads.googleads.v9.enums;
+    GoogleAds.common = google_proto_1.google.ads.googleads.v9.common;
+    GoogleAds.errors = google_proto_1.google.ads.googleads.v9.errors;
 })(GoogleAds = exports.GoogleAds || (exports.GoogleAds = {}));
 __exportStar(require("./client"), exports);
 __exportStar(require("./extract"), exports);

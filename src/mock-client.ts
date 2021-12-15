@@ -8,9 +8,9 @@ import {
 } from "./client";
 import { flatten } from "./extract";
 
-import ITagSnippet = google.ads.googleads.v8.common.ITagSnippet;
-import TrackingCodeType = google.ads.googleads.v8.enums.TrackingCodeTypeEnum.TrackingCodeType;
-import TrackingCodePageFormat = google.ads.googleads.v8.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+import ITagSnippet = google.ads.googleads.v9.common.ITagSnippet;
+import TrackingCodeType = google.ads.googleads.v9.enums.TrackingCodeTypeEnum.TrackingCodeType;
+import TrackingCodePageFormat = google.ads.googleads.v9.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 
 const hash32 = (str: any) =>
   crypto
@@ -191,7 +191,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
 
     if (params.filters !== undefined) {
       resources = resources.filter((gResource: any) => {
-        const gResourceStringed = (google.ads.googleads.v8.resources as any)[
+        const gResourceStringed = (google.ads.googleads.v9.resources as any)[
           params.resource
         ].toObject(gResource, {
           enums: String,

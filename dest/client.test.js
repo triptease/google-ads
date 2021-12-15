@@ -250,7 +250,7 @@ describe("GoogleAdsClient", () => {
         it("should get a service", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v8.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v9.services.CampaignService);
         });
     });
 });

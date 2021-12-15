@@ -4,10 +4,10 @@ import { google } from "../compiled/google-proto";
 import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
-declare const services: typeof google.ads.googleads.v8.services;
+declare const services: typeof google.ads.googleads.v9.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
-declare const resources: typeof google.ads.googleads.v8.resources;
+declare const resources: typeof google.ads.googleads.v9.resources;
 declare type resources = typeof resources;
 declare type resourceNames = keyof resources;
 export interface GoogleAdsClientOptions {
@@ -72,7 +72,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {
-    firstError: google.ads.googleads.v8.errors.IErrorCode | null | undefined;
+    firstError: google.ads.googleads.v9.errors.IErrorCode | null | undefined;
     code: Status;
     details: string;
     metadata: grpc.Metadata;

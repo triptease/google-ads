@@ -50,9 +50,9 @@ const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v8";
-const services = google_proto_1.google.ads.googleads.v8.services;
-const resources = google_proto_1.google.ads.googleads.v8.resources;
+const GOOGLE_ADS_VERSION = "v9";
+const services = google_proto_1.google.ads.googleads.v9.services;
+const resources = google_proto_1.google.ads.googleads.v9.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 class ResourceNotFoundError extends Error {
 }
@@ -262,7 +262,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v8.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v9.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;
