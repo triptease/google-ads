@@ -10,12 +10,18 @@ declare type serviceNames = keyof services;
 declare const resources: typeof google.ads.googleads.v9.resources;
 declare type resources = typeof resources;
 declare type resourceNames = keyof resources;
+export interface IServiceCache {
+    set<T extends serviceNames>(serviceName: T, service: InstanceType<services[T]>): void;
+    get<T extends serviceNames>(serviceName: T): InstanceType<services[T]> | undefined;
+}
+export declare const createServiceCache: () => IServiceCache;
 export interface GoogleAdsClientOptions {
     authOptions: JWTOptions;
     developerToken: string;
     mccAccountId: string;
     timeout?: number;
     clientPoolSize?: number;
+    serviceCache?: IServiceCache;
 }
 export declare class ResourceNotFoundError extends Error {
 }

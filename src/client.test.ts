@@ -1,5 +1,6 @@
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 import { OAuth2Client } from "google-auth-library";
+import { createServiceCache, IServiceCache } from ".";
 import { google } from "../compiled/google-proto";
 import {
   ClientCreator,
@@ -105,8 +106,7 @@ describe("GoogleAdsClient", () => {
         customerId: "123",
         pageSize: 1000,
         pageToken: null,
-        query:
-          `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
+        query: `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
       });
     });
 
@@ -147,8 +147,7 @@ describe("GoogleAdsClient", () => {
         customerId: "123",
         pageSize: 1000,
         pageToken: null,
-        query:
-          `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
+        query: `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
       });
     });
 
@@ -191,11 +190,9 @@ describe("GoogleAdsClient", () => {
         customerId: "123",
         pageSize: 1000,
         pageToken: null,
-        query:
-          `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' ORDER BY campaign.status DESC LIMIT 300`,
+        query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' ORDER BY campaign.status DESC LIMIT 300`,
       });
     });
-
 
     it("should produce SQL  and escale quotes", async () => {
       const client = new GoogleAdsClient(settings);
@@ -207,18 +204,16 @@ describe("GoogleAdsClient", () => {
         resource: "Campaign",
         filters: {
           name: `'Sneaky' \\'Hacks\\'`,
-        }
+        },
       });
 
       expect(services.GoogleAdsService.search).toBeCalledWith({
         customerId: "123",
         pageSize: 1000,
         pageToken: null,
-        query:
-          `SELECT campaign.status FROM campaign WHERE campaign.name = '\\'Sneaky\\' \\\\\\'Hacks\\\\\\''`,
+        query: `SELECT campaign.status FROM campaign WHERE campaign.name = '\\'Sneaky\\' \\\\\\'Hacks\\\\\\''`,
       });
     });
-
 
     it("should produce SQL with booleans", async () => {
       const client = new GoogleAdsClient(settings);
@@ -238,7 +233,7 @@ describe("GoogleAdsClient", () => {
         pageSize: 1000,
         pageToken: null,
         query:
-          'SELECT campaign_budget.name FROM campaign_budget WHERE campaign_budget.explicitly_shared = true',
+          "SELECT campaign_budget.name FROM campaign_budget WHERE campaign_budget.explicitly_shared = true",
       });
     });
 
@@ -259,8 +254,7 @@ describe("GoogleAdsClient", () => {
         customerId: "123",
         pageSize: 1000,
         pageToken: null,
-        query:
-          `SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"`,
+        query: `SELECT change_status.last_change_date_time FROM change_status WHERE change_status.last_change_date_time > "2020-01-01"`,
       });
     });
 
@@ -295,8 +289,7 @@ describe("GoogleAdsClient", () => {
 
       expect(services.GoogleAdsService.search).toBeCalledWith(
         expect.objectContaining({
-          query:
-            `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
+          query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
         })
       );
     });
@@ -321,6 +314,63 @@ describe("GoogleAdsClient", () => {
     it("should get a service", async () => {
       const client = new GoogleAdsClient(settings);
       const service = client.getService("CampaignService");
+      expect(service).toBeInstanceOf(
+        google.ads.googleads.v9.services.CampaignService
+      );
+    });
+  });
+
+  describe("serviceCache", () => {
+    it("should cache a service", async () => {
+      const testServiceCache = createServiceCache();
+      const serviceCacheWrapper: IServiceCache = {
+        get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
+        set: jest.fn((serviceName, service) =>
+          testServiceCache.set(serviceName, service)
+        ),
+      };
+
+      const localSettings = Object.assign({}, settings, {
+        serviceCache: serviceCacheWrapper,
+      });
+
+      const client = new GoogleAdsClient(localSettings);
+      let service = client.getService("CampaignService");
+
+      expect(service).toBeInstanceOf(
+        google.ads.googleads.v9.services.CampaignService
+      );
+
+      service = client.getService("CampaignService");
+
+      // Total number of sets should be 1
+      expect(serviceCacheWrapper.set).toBeCalledTimes(1);
+      expect(service).toBeInstanceOf(
+        google.ads.googleads.v9.services.CampaignService
+      );
+    });
+
+    it("should allow a bypass service cache", async () => {
+      const serviceCacheBypass: IServiceCache = {
+        get: jest.fn(() => undefined),
+        set: jest.fn(() => {}),
+      };
+
+      const localSettings = Object.assign({}, settings, {
+        serviceCache: serviceCacheBypass,
+      });
+
+      const client = new GoogleAdsClient(localSettings);
+      let service = client.getService("CampaignService");
+
+      expect(service).toBeInstanceOf(
+        google.ads.googleads.v9.services.CampaignService
+      );
+
+      service = client.getService("CampaignService");
+
+      // Total number of sets should be 2
+      expect(serviceCacheBypass.set).toBeCalledTimes(2);
       expect(service).toBeInstanceOf(
         google.ads.googleads.v9.services.CampaignService
       );

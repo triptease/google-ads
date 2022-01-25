@@ -41,7 +41,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GaClientError = exports.GoogleAdsClient = exports.ClientPool = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = void 0;
+exports.GaClientError = exports.GoogleAdsClient = exports.ClientPool = exports.InvalidRPCServiceError = exports.ResourceNotFoundError = exports.createServiceCache = void 0;
 const sqlstring_1 = __importDefault(require("sqlstring"));
 const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
@@ -54,6 +54,20 @@ const GOOGLE_ADS_VERSION = "v9";
 const services = google_proto_1.google.ads.googleads.v9.services;
 const resources = google_proto_1.google.ads.googleads.v9.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
+const createServiceCache = () => {
+    const serviceCache = {};
+    return {
+        get: (serviceName) => {
+            if (serviceCache[serviceName]) {
+                return serviceCache[serviceName];
+            }
+        },
+        set: (serviceName, service) => {
+            serviceCache[serviceName] = service;
+        },
+    };
+};
+exports.createServiceCache = createServiceCache;
 class ResourceNotFoundError extends Error {
 }
 exports.ResourceNotFoundError = ResourceNotFoundError;
@@ -96,13 +110,13 @@ class ClientPool {
 exports.ClientPool = ClientPool;
 class GoogleAdsClient {
     constructor(options) {
-        // Service creation leaks memory, so services are cached and re-used.
-        this.serviceCache = {};
+        var _a;
         this.options = options;
         this.metadata = new grpc.Metadata();
         this.metadata.add("developer-token", this.options.developerToken);
         this.metadata.add("login-customer-id", this.options.mccAccountId);
         this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
+        this.serviceCache = (_a = this.options.serviceCache) !== null && _a !== void 0 ? _a : (0, exports.createServiceCache)();
     }
     getMccAccountId() {
         return this.options.mccAccountId;
@@ -156,7 +170,9 @@ class GoogleAdsClient {
                     : [filterValue];
                 const quotedFilters = filterValues.map((filterValue) => sqlstring_1.default.escape(filterValue));
                 const tableFieldName = `${tableName}.${(0, lodash_1.snakeCase)(filterName)}`;
-                const conditional = quotedFilters.length === 1 ? ` = ${quotedFilters[0]}` : ` in (${quotedFilters.join(",")})`;
+                const conditional = quotedFilters.length === 1
+                    ? ` = ${quotedFilters[0]}`
+                    : ` in (${quotedFilters.join(",")})`;
                 wheres.push(tableFieldName + conditional);
             }
         }
@@ -229,8 +245,9 @@ class GoogleAdsClient {
         throw new ResourceNotFoundError(`Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`);
     }
     getService(serviceName) {
-        if (this.serviceCache[serviceName]) {
-            return this.serviceCache[serviceName];
+        const cachedService = this.serviceCache.get(serviceName);
+        if (cachedService) {
+            return cachedService;
         }
         const rpcServiceConstructor = services[serviceName];
         if (!(rpcServiceConstructor.prototype instanceof $protobuf.rpc.Service)) {
@@ -238,7 +255,7 @@ class GoogleAdsClient {
         }
         const rpcImplementation = this.getRpcImpl(serviceName);
         const service = new rpcServiceConstructor(rpcImplementation);
-        this.serviceCache[serviceName] = service;
+        this.serviceCache.set(serviceName, service);
         return service;
     }
 }

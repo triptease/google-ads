@@ -1,4 +1,4 @@
-import SqlString from 'sqlstring';
+import SqlString from "sqlstring";
 import { JWT, JWTOptions, OAuth2Client } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
 import _, { camelCase, snakeCase } from "lodash";
@@ -22,12 +22,40 @@ type resourceNames = keyof resources;
 
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 
+export interface IServiceCache {
+  set<T extends serviceNames>(
+    serviceName: T,
+    service: InstanceType<services[T]>
+  ): void;
+  get<T extends serviceNames>(
+    serviceName: T
+  ): InstanceType<services[T]> | undefined;
+}
+
+export const createServiceCache = (): IServiceCache => {
+  const serviceCache: ServiceCache = {};
+
+  return {
+    get: (serviceName) => {
+      if (serviceCache[serviceName]) {
+        return serviceCache[serviceName] as InstanceType<
+          services[typeof serviceName]
+        >;
+      }
+    },
+    set: (serviceName, service) => {
+      serviceCache[serviceName] = service as ServiceCache[typeof serviceName];
+    },
+  };
+};
+
 export interface GoogleAdsClientOptions {
   authOptions: JWTOptions;
   developerToken: string;
   mccAccountId: string;
   timeout?: number;
   clientPoolSize?: number;
+  serviceCache?: IServiceCache;
 }
 
 export class ResourceNotFoundError extends Error {}
@@ -135,7 +163,7 @@ export class ClientPool {
 export class GoogleAdsClient implements IGoogleAdsClient {
   private readonly options: GoogleAdsClientOptions;
   // Service creation leaks memory, so services are cached and re-used.
-  private readonly serviceCache: ServiceCache = {};
+  private readonly serviceCache: IServiceCache;
   private readonly metadata: grpc.Metadata;
   private readonly clientPool: ClientPool;
 
@@ -150,6 +178,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       this.options.authOptions,
       this.options.clientPoolSize
     );
+
+    this.serviceCache = this.options.serviceCache ?? createServiceCache();
   }
 
   public getMccAccountId(): string {
@@ -239,12 +269,15 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           ? filterValue
           : [filterValue];
 
-        const quotedFilters = filterValues.map(
-          (filterValue) => SqlString.escape(filterValue)
+        const quotedFilters = filterValues.map((filterValue) =>
+          SqlString.escape(filterValue)
         );
         const tableFieldName = `${tableName}.${snakeCase(filterName)}`;
 
-        const conditional = quotedFilters.length === 1 ? ` = ${quotedFilters[0]}` : ` in (${quotedFilters.join(",")})`;
+        const conditional =
+          quotedFilters.length === 1
+            ? ` = ${quotedFilters[0]}`
+            : ` in (${quotedFilters.join(",")})`;
         wheres.push(tableFieldName + conditional);
       }
     }
@@ -341,8 +374,10 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public getService<T extends serviceNames>(
     serviceName: T
   ): InstanceType<services[T]> {
-    if (this.serviceCache[serviceName]) {
-      return this.serviceCache[serviceName] as InstanceType<services[T]>;
+    const cachedService = this.serviceCache.get(serviceName);
+
+    if (cachedService) {
+      return cachedService;
     }
 
     const rpcServiceConstructor = services[serviceName];
@@ -356,7 +391,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const rpcImplementation = this.getRpcImpl(serviceName);
     const service = new rpcServiceConstructor(rpcImplementation);
 
-    this.serviceCache[serviceName] = service as ServiceCache[T];
+    this.serviceCache.set(serviceName, service as InstanceType<services[T]>);
     return service as InstanceType<services[T]>;
   }
 }
