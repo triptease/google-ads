@@ -11,10 +11,10 @@ git clone https://github.com/googleapis/googleapis.git
 cd googleapis
 # most recent commit to GoogleAds protobuf definitions:
 # https://github.com/googleapis/googleapis/tree/master/google/ads/googleads
-git checkout 429d35c835fd8509302ca0e8031eab35a99e767e
+git checkout 65b26a518727c99db2a7feb521414d9bd38b2e6b
 cd ../
 
-ADS_VERSION=v9
+ADS_VERSION=v10
 PROTO_ROOT_DIR=googleapis/
 
 PROTO_COMMON_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/common/*.proto

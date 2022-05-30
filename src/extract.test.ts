@@ -52,9 +52,9 @@ describe("flatten", () => {
   test("extract should not mangle Long values", () => {
     // create a simple protobuf object with a campaign id in it
     const id = Long.fromNumber(12345);
-    const campaign = new google.ads.googleads.v9.resources.Campaign({ id });
+    const campaign = new google.ads.googleads.v10.resources.Campaign({ id });
 
-    const row = new google.ads.googleads.v9.services.GoogleAdsRow({ campaign });
+    const row = new google.ads.googleads.v10.services.GoogleAdsRow({ campaign });
 
     const extractedRow = extract(row, ["campaign"]);
     expect(extractedRow.campaign.id).toBe(12345);
@@ -65,7 +65,7 @@ describe("flatten", () => {
 
   test("flatten should not mangle Long values", () => {
     const id = Long.fromNumber(12345);
-    const campaign = new google.ads.googleads.v9.resources.Campaign({ id });
+    const campaign = new google.ads.googleads.v10.resources.Campaign({ id });
 
     const flattenedCampaign = flatten(campaign);
     expect(flattenedCampaign.id).toEqual(12345);
