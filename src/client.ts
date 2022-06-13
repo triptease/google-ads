@@ -10,13 +10,13 @@ import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v10";
+const GOOGLE_ADS_VERSION = "v11";
 
-const services = google.ads.googleads.v10.services;
+const services = google.ads.googleads.v11.services;
 type services = typeof services;
 type serviceNames = keyof services;
 
-const resources = google.ads.googleads.v10.resources;
+const resources = google.ads.googleads.v11.resources;
 type resources = typeof resources;
 type resourceNames = keyof resources;
 
@@ -212,7 +212,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
   private fieldsCache:
     | undefined
-    | Array<extract<google.ads.googleads.v10.resources.IGoogleAdsField, "name">>;
+    | Array<extract<google.ads.googleads.v11.resources.IGoogleAdsField, "name">>;
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
       const fieldQueryService = this.getService("GoogleAdsFieldService");
@@ -397,7 +397,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 }
 
 export class GaClientError extends Error implements StatusObject {
-  firstError: google.ads.googleads.v10.errors.IErrorCode | null | undefined;
+  firstError: google.ads.googleads.v11.errors.IErrorCode | null | undefined;
   code: Status;
   details: string;
   metadata: grpc.Metadata;
@@ -420,7 +420,7 @@ const FAILURE_KEY = `google.ads.googleads.${GOOGLE_ADS_VERSION}.errors.googleads
 
 function parseGoogleAdsErrorFromMetadata(
   metadata: grpc.Metadata | undefined
-): google.ads.googleads.v10.errors.GoogleAdsFailure[] {
+): google.ads.googleads.v11.errors.GoogleAdsFailure[] {
   if (!metadata) {
     return [];
   }
@@ -428,7 +428,7 @@ function parseGoogleAdsErrorFromMetadata(
   const failureArray = metadata.get(FAILURE_KEY);
 
   return failureArray.map((bytes) =>
-    google.ads.googleads.v10.errors.GoogleAdsFailure.decode(bytes as any)
+    google.ads.googleads.v11.errors.GoogleAdsFailure.decode(bytes as any)
   );
 }
 

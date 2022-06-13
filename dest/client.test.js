@@ -251,7 +251,7 @@ describe("GoogleAdsClient", () => {
         it("should get a service", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v10.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
         });
     });
     describe("serviceCache", () => {
@@ -266,11 +266,11 @@ describe("GoogleAdsClient", () => {
             });
             const client = new client_1.GoogleAdsClient(localSettings);
             let service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v10.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
             service = client.getService("CampaignService");
             // Total number of sets should be 1
             expect(serviceCacheWrapper.set).toBeCalledTimes(1);
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v10.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
         });
         it("should allow a bypass service cache", async () => {
             const serviceCacheBypass = {
@@ -282,11 +282,11 @@ describe("GoogleAdsClient", () => {
             });
             const client = new client_1.GoogleAdsClient(localSettings);
             let service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v10.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
             service = client.getService("CampaignService");
             // Total number of sets should be 2
             expect(serviceCacheBypass.set).toBeCalledTimes(2);
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v10.services.CampaignService);
+            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
         });
     });
 });

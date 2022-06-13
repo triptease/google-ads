@@ -50,9 +50,9 @@ const $protobuf = __importStar(require("protobufjs"));
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v10";
-const services = google_proto_1.google.ads.googleads.v10.services;
-const resources = google_proto_1.google.ads.googleads.v10.resources;
+const GOOGLE_ADS_VERSION = "v11";
+const services = google_proto_1.google.ads.googleads.v11.services;
+const resources = google_proto_1.google.ads.googleads.v11.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
     const serviceCache = {};
@@ -279,7 +279,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v10.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v11.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;
