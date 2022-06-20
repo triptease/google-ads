@@ -1,13 +1,14 @@
 import SqlString from "sqlstring";
-import { JWT, JWTOptions, OAuth2Client } from "google-auth-library";
+import { JWT, JWTOptions } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import _, { camelCase, snakeCase } from "lodash";
+import { camelCase, snakeCase } from "lodash";
 import * as $protobuf from "protobufjs";
 import { google } from "../compiled/google-proto";
 import { extract } from "./extract";
 import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { Logger } from "winston";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v10";
@@ -56,6 +57,7 @@ export interface GoogleAdsClientOptions {
   timeout?: number;
   clientPoolSize?: number;
   serviceCache?: IServiceCache;
+  logger?: Logger;
 }
 
 export class ResourceNotFoundError extends Error {}
@@ -334,7 +336,16 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         pageSize: 1000,
       };
 
-      const result = await googleAdsService.search(request);
+      let result: google.ads.googleads.v10.services.SearchGoogleAdsResponse;
+      try {
+        result = await googleAdsService.search(request);
+      } catch (error) {
+        this.options.logger?.error("Error occurred during search", {
+          request,
+          error,
+        });
+        throw error;
+      }
 
       token = result.nextPageToken as string;
 

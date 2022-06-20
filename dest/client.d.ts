@@ -4,6 +4,7 @@ import { google } from "../compiled/google-proto";
 import { StatusObject } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { Logger } from "winston";
 declare const services: typeof google.ads.googleads.v10.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
@@ -22,6 +23,7 @@ export interface GoogleAdsClientOptions {
     timeout?: number;
     clientPoolSize?: number;
     serviceCache?: IServiceCache;
+    logger?: Logger;
 }
 export declare class ResourceNotFoundError extends Error {
 }
