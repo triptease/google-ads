@@ -77,7 +77,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     private buildSearchSql;
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
     searchGenerator<R extends resourceNames>(params: ClientSearchParams<R>): AsyncIterable<InstanceType<resources[R]>>;
-    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
+    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[]): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {

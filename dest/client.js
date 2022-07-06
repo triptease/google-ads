@@ -242,7 +242,7 @@ class GoogleAdsClient {
             return yield __await(void 0);
         });
     }
-    async findOne(customerId, resource, resourceId) {
+    async findOne(customerId, resource, resourceId, fields) {
         const resourceName = `customers/${customerId}/${(0, lodash_1.camelCase)(resource)}s/${resourceId}`;
         const results = await this.search({
             customerId,
@@ -251,6 +251,7 @@ class GoogleAdsClient {
             filters: {
                 resourceName: [resourceName],
             },
+            fields,
         });
         if (results.length > 0) {
             return results[0];

@@ -364,7 +364,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public async findOne<R extends resourceNames>(
     customerId: string,
     resource: R,
-    resourceId: number
+    resourceId: number,
+    fields?: string[]
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
       resource
@@ -376,6 +377,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       filters: {
         resourceName: [resourceName],
       } as any,
+      fields,
     });
 
     if (results.length > 0) {
