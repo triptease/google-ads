@@ -89,7 +89,8 @@ export interface IGoogleAdsClient {
   findOne<R extends resourceNames>(
     customerId: string,
     resource: R,
-    resourceId: number
+    resourceId: number,
+    fields?: string[]
   ): Promise<InstanceType<resources[R]>>;
   getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
