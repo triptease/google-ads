@@ -206,11 +206,13 @@ class GoogleAdsClient {
         return results;
     }
     searchGenerator(params) {
-        var _a;
+        var _a, _b;
         return __asyncGenerator(this, arguments, function* searchGenerator_1() {
             const tableName = (0, lodash_1.snakeCase)(params.resource);
             const objName = (0, lodash_1.camelCase)(params.resource);
-            const fields = yield __await(this.getFieldsForTable(tableName));
+            const fields = ((_a = params.fields) === null || _a === void 0 ? void 0 : _a.length)
+                ? params.fields.map((f) => ({ name: f }))
+                : yield __await(this.getFieldsForTable(tableName));
             const googleAdsService = this.getService("GoogleAdsService");
             let token = null;
             do {
@@ -226,7 +228,7 @@ class GoogleAdsClient {
                     result = yield __await(googleAdsService.search(request));
                 }
                 catch (error) {
-                    (_a = this.options.logger) === null || _a === void 0 ? void 0 : _a.error("Error occurred during search", {
+                    (_b = this.options.logger) === null || _b === void 0 ? void 0 : _b.error("Error occurred during search", {
                         request,
                         error,
                     });

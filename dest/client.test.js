@@ -115,6 +115,27 @@ describe("GoogleAdsClient", () => {
                 query: `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
             });
         });
+        it("should produce SQL to search using only the passed fields", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.search({
+                customerId: "123",
+                resource: "Campaign",
+                filters: {
+                    status: ["ENABLED", "PAUSED"],
+                    name: "test",
+                },
+                fields: ["some_field", "other_field"],
+            });
+            expect(services.GoogleAdsFieldService.searchGoogleAdsFields).not.toHaveBeenCalled();
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: `SELECT some_field, other_field FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
+            });
+        });
         it("should produce SQL basic", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const services = buildMockGetServices();

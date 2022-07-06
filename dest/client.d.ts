@@ -37,6 +37,7 @@ export interface ClientSearchParams<R extends resourceNames> {
             raw: string;
         };
     };
+    fields?: string[];
     orderBy?: keyof InstanceType<resources[R]>;
     orderByDirection?: "ASC" | "DESC";
     limit?: number;
