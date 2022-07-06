@@ -75,6 +75,7 @@ export interface ClientSearchParams<R extends resourceNames> {
       | number[]
       | { raw: string };
   };
+  fields?: string[];
   orderBy?: keyof InstanceType<resources[R]>;
   orderByDirection?: "ASC" | "DESC";
   limit?: number;
@@ -214,7 +215,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
   private fieldsCache:
     | undefined
-    | Array<extract<google.ads.googleads.v10.resources.IGoogleAdsField, "name">>;
+    | Array<
+        extract<google.ads.googleads.v10.resources.IGoogleAdsField, "name">
+      >;
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
       const fieldQueryService = this.getService("GoogleAdsFieldService");
@@ -315,7 +318,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   ): AsyncIterable<InstanceType<resources[R]>> {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
-    const fields = await this.getFieldsForTable(tableName);
+    const fields = params.fields?.length
+      ? params.fields.map((f) => ({ name: f }))
+      : await this.getFieldsForTable(tableName);
     const googleAdsService = this.getService("GoogleAdsService");
     let token: string | null = null;
 

@@ -54,7 +54,9 @@ describe("flatten", () => {
     const id = Long.fromNumber(12345);
     const campaign = new google.ads.googleads.v10.resources.Campaign({ id });
 
-    const row = new google.ads.googleads.v10.services.GoogleAdsRow({ campaign });
+    const row = new google.ads.googleads.v10.services.GoogleAdsRow({
+      campaign,
+    });
 
     const extractedRow = extract(row, ["campaign"]);
     expect(extractedRow.campaign.id).toBe(12345);
