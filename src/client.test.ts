@@ -194,7 +194,7 @@ describe("GoogleAdsClient", () => {
       });
     });
 
-    it("should produce SQL  and escale quotes", async () => {
+    it("should produce SQL and escape quotes", async () => {
       const client = new GoogleAdsClient(settings);
       const services = buildMockGetServices();
       client.getService = services;
