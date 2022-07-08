@@ -1,7 +1,7 @@
 import SqlString from "sqlstring";
 import {JWT, JWTOptions} from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import {StatusObject} from "@grpc/grpc-js";
+import {ClientUnaryCall, StatusObject} from "@grpc/grpc-js";
 import {camelCase, snakeCase} from "lodash";
 import * as $protobuf from "protobufjs";
 import {rpc} from "protobufjs";
@@ -201,13 +201,17 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
   private getRpcImpl(serviceName: serviceNames): $protobuf.RPCImpl {
     const timeout = this.options?.timeout;
+    let call: ClientUnaryCall | undefined;
 
     return (method, requestData, callback) => {
-      if (!method) {
+      if (method === null && requestData === null && callback == null) { // Called by rpc.Service.end
+        if (call) {
+          call.cancel();
+        }
         return;
       }
       const client = this.clientPool.getClient();
-      client.makeUnaryRequest(
+      call = client.makeUnaryRequest(
         `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`,
         (value: Uint8Array) => Buffer.from(value),
         (value: Buffer) => value,
@@ -217,12 +221,14 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           deadline: timeout ? Date.now() + timeout : undefined,
         },
         function (err, value) {
+          call = undefined;
           if (isServiceError(err)) {
             err = new GaClientError(err);
           }
           callback(err, value);
         }
       );
+      return call;
     };
   }
 
