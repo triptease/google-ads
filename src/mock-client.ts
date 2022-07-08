@@ -218,8 +218,8 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
     return resources;
   }
 
-  public async stop(): Promise<void> {
-    return Promise.resolve();
+  public stop(): void {
+    //Do nothing
   }
 
   private getNewIdentifer(resourceName: string, customerId: string) {

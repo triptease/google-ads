@@ -1,13 +1,8 @@
-import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
-import { OAuth2Client } from "google-auth-library";
-import { createServiceCache, IServiceCache } from ".";
-import { google } from "../compiled/google-proto";
-import {
-  ClientCreator,
-  ClientPool,
-  GoogleAdsClient,
-  ResourceNotFoundError,
-} from "./client";
+import {ServiceClient} from "@grpc/grpc-js/build/src/make-client";
+import {OAuth2Client} from "google-auth-library";
+import {createServiceCache, IServiceCache} from ".";
+import {google} from "../compiled/google-proto";
+import {ClientCreator, ClientPool, GoogleAdsClient, ResourceNotFoundError,} from "./client";
 
 const settings = {
   developerToken: "dev-toke",
@@ -320,6 +315,28 @@ describe("GoogleAdsClient", () => {
     });
   });
 
+  describe("stop", () => {
+
+    const services = google.ads.googleads.v11.services;
+    type services = typeof services;
+    type serviceNames = keyof services;
+
+    it("should clear the cache and end all services when stopped", async () => {
+      const testServiceCache = createServiceCache();
+      const serviceCacheWrapper: IServiceCache = {
+        get: jest.fn( <T extends serviceNames>(serviceName: T) => testServiceCache.get(serviceName)),
+        set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
+        clear: jest.fn(async () => testServiceCache.clear())
+      };
+      const client = new GoogleAdsClient({...settings, serviceCache: serviceCacheWrapper});
+      const service = client.getService("CampaignService");
+      await client.stop();
+
+      expect(serviceCacheWrapper.clear).toBeCalledTimes(1);
+      expect(service.rpcImpl).toBeNull();
+    });
+  });
+
   describe("serviceCache", () => {
     it("should cache a service", async () => {
       const testServiceCache = createServiceCache();
@@ -328,7 +345,7 @@ describe("GoogleAdsClient", () => {
         set: jest.fn((serviceName, service) =>
           testServiceCache.set(serviceName, service)
         ),
-        stop: jest.fn(async () => testServiceCache.stop())
+        clear: jest.fn(() => testServiceCache.clear())
       };
 
       const localSettings = Object.assign({}, settings, {
@@ -343,21 +360,19 @@ describe("GoogleAdsClient", () => {
       );
 
       service = client.getService("CampaignService");
-      client.stop();
 
       // Total number of sets should be 1
       expect(serviceCacheWrapper.set).toBeCalledTimes(1);
       expect(service).toBeInstanceOf(
         google.ads.googleads.v11.services.CampaignService
       );
-      expect(serviceCacheWrapper.stop).toBeCalledTimes(1);
     });
 
     it("should allow a bypass service cache", async () => {
       const serviceCacheBypass: IServiceCache = {
         get: jest.fn(() => undefined),
         set: jest.fn(() => {}),
-        stop:jest.fn(async () => {}),
+        clear:jest.fn(async () => {}),
       };
 
       const localSettings = Object.assign({}, settings, {
@@ -379,7 +394,7 @@ describe("GoogleAdsClient", () => {
       expect(service).toBeInstanceOf(
         google.ads.googleads.v11.services.CampaignService
       );
-      expect(serviceCacheBypass.stop).toBeCalledTimes(1);
+      expect(serviceCacheBypass.clear).toBeCalledTimes(1);
     });
   });
 });

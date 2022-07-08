@@ -25,10 +25,10 @@ type resourceNames = keyof resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 
 export interface Stoppable {
-  stop(): Promise<void>;
+  stop(): void;
 }
 
-export interface IServiceCache extends Stoppable {
+export interface IServiceCache {
   set<T extends serviceNames>(
     serviceName: T,
     service: InstanceType<services[T]>
@@ -36,6 +36,7 @@ export interface IServiceCache extends Stoppable {
   get<T extends serviceNames>(
     serviceName: T
   ): InstanceType<services[T]> | undefined;
+  clear():void;
 }
 
 export const createServiceCache = (): IServiceCache => {
@@ -43,7 +44,7 @@ export const createServiceCache = (): IServiceCache => {
 
   return {
     get: (serviceName) => {
-      if (serviceCache[serviceName]) {//TODO: Check that it is not stopped
+      if (serviceCache[serviceName]) {
         return serviceCache[serviceName] as InstanceType<
           services[typeof serviceName]
         >;
@@ -52,9 +53,10 @@ export const createServiceCache = (): IServiceCache => {
     set: (serviceName, service) => {
       serviceCache[serviceName] = service as ServiceCache[typeof serviceName];
     },
-    stop: async () => {
-      for (let service of Object.values(serviceCache) as rpc.Service[]) {
-        service.end();
+    clear: () => {
+      for(const serviceName of Object.keys(serviceCache) as (keyof services)[]){
+        (serviceCache[serviceName] as rpc.Service).end();
+        delete serviceCache[serviceName];
       }
     }
   };
@@ -359,13 +361,17 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     return;
   }
 
+  public stop(): void {
+    return this.serviceCache.clear();
+  }
+
   public async findOne<R extends resourceNames>(
-    customerId: string,
-    resource: R,
-    resourceId: number
+      customerId: string,
+      resource: R,
+      resourceId: number
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
-      resource
+        resource
     )}s/${resourceId}`;
     const results = await this.search({
       customerId,
@@ -381,12 +387,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     }
 
     throw new ResourceNotFoundError(
-      `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
+        `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
     );
   }
 
   public getService<T extends serviceNames>(
-    serviceName: T
+      serviceName: T
   ): InstanceType<services[T]> {
     const cachedService = this.serviceCache.get(serviceName);
 
@@ -398,7 +404,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     if (!(rpcServiceConstructor.prototype instanceof rpc.Service)) {
       throw new InvalidRPCServiceError(
-        `Service with serviceName ${serviceName} does not support remote procedure calls`
+          `Service with serviceName ${serviceName} does not support remote procedure calls`
       );
     }
 
@@ -407,10 +413,6 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     this.serviceCache.set(serviceName, service as InstanceType<services[T]>);
     return service as InstanceType<services[T]>;
-  }
-
-  public async stop(): Promise<void> {
-    return this.serviceCache.stop();
   }
 }
 
