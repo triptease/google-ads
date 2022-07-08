@@ -152,7 +152,7 @@ describe("GoogleAdsClient", () => {
                 query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' ORDER BY campaign.status DESC LIMIT 300`,
             });
         });
-        it("should produce SQL  and escale quotes", async () => {
+        it("should produce SQL and escape quotes", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const services = buildMockGetServices();
             client.getService = services;
@@ -254,12 +254,29 @@ describe("GoogleAdsClient", () => {
             expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
         });
     });
+    describe("stop", () => {
+        const services = google_proto_1.google.ads.googleads.v11.services;
+        it("should clear the cache and end all services when stopped", async () => {
+            const testServiceCache = (0, _1.createServiceCache)();
+            const serviceCacheWrapper = {
+                get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
+                set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
+                clear: jest.fn(async () => testServiceCache.clear())
+            };
+            const client = new client_1.GoogleAdsClient(Object.assign(Object.assign({}, settings), { serviceCache: serviceCacheWrapper }));
+            const service = client.getService("CampaignService");
+            await client.stop();
+            expect(serviceCacheWrapper.clear).toBeCalledTimes(1);
+            expect(service.rpcImpl).toBeNull();
+        });
+    });
     describe("serviceCache", () => {
         it("should cache a service", async () => {
             const testServiceCache = (0, _1.createServiceCache)();
             const serviceCacheWrapper = {
                 get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
                 set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
+                clear: jest.fn(() => testServiceCache.clear())
             };
             const localSettings = Object.assign({}, settings, {
                 serviceCache: serviceCacheWrapper,
@@ -276,6 +293,7 @@ describe("GoogleAdsClient", () => {
             const serviceCacheBypass = {
                 get: jest.fn(() => undefined),
                 set: jest.fn(() => { }),
+                clear: jest.fn(async () => { }),
             };
             const localSettings = Object.assign({}, settings, {
                 serviceCache: serviceCacheBypass,
@@ -284,9 +302,11 @@ describe("GoogleAdsClient", () => {
             let service = client.getService("CampaignService");
             expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
             service = client.getService("CampaignService");
+            client.stop();
             // Total number of sets should be 2
             expect(serviceCacheBypass.set).toBeCalledTimes(2);
             expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v11.services.CampaignService);
+            expect(serviceCacheBypass.clear).toBeCalledTimes(1);
         });
     });
 });

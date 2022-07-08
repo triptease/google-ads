@@ -1,15 +1,14 @@
 import SqlString from "sqlstring";
-import {JWT, JWTOptions} from "google-auth-library";
+import { JWT, JWTOptions } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import {ClientUnaryCall, StatusObject} from "@grpc/grpc-js";
-import {camelCase, snakeCase} from "lodash";
+import { ClientUnaryCall, StatusObject } from "@grpc/grpc-js";
+import { camelCase, snakeCase } from "lodash";
 import * as $protobuf from "protobufjs";
-import {rpc} from "protobufjs";
-import {google} from "../compiled/google-proto";
-import {extract} from "./extract";
-import {Status} from "@grpc/grpc-js/build/src/constants";
-import {ServiceClient} from "@grpc/grpc-js/build/src/make-client";
-
+import { rpc } from "protobufjs";
+import { google } from "../compiled/google-proto";
+import { extract } from "./extract";
+import { Status } from "@grpc/grpc-js/build/src/constants";
+import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v11";
@@ -36,7 +35,7 @@ export interface IServiceCache {
   get<T extends serviceNames>(
     serviceName: T
   ): InstanceType<services[T]> | undefined;
-  clear():void;
+  clear(): void;
 }
 
 export const createServiceCache = (): IServiceCache => {
@@ -54,11 +53,13 @@ export const createServiceCache = (): IServiceCache => {
       serviceCache[serviceName] = service as ServiceCache[typeof serviceName];
     },
     clear: () => {
-      for(const serviceName of Object.keys(serviceCache) as (keyof services)[]){
+      for (const serviceName of Object.keys(
+        serviceCache
+      ) as (keyof services)[]) {
         (serviceCache[serviceName] as rpc.Service).end();
         delete serviceCache[serviceName];
       }
-    }
+    },
   };
 };
 
@@ -204,7 +205,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     let call: ClientUnaryCall | undefined;
 
     return (method, requestData, callback) => {
-      if (method === null && requestData === null && callback == null) { // Called by rpc.Service.end
+      if (method === null && requestData === null && callback == null) {
+        // Called by rpc.Service.end
         if (call) {
           call.cancel();
         }
@@ -234,7 +236,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
   private fieldsCache:
     | undefined
-    | Array<extract<google.ads.googleads.v11.resources.IGoogleAdsField, "name">>;
+    | Array<
+        extract<google.ads.googleads.v11.resources.IGoogleAdsField, "name">
+      >;
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
       const fieldQueryService = this.getService("GoogleAdsFieldService");
@@ -372,12 +376,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   }
 
   public async findOne<R extends resourceNames>(
-      customerId: string,
-      resource: R,
-      resourceId: number
+    customerId: string,
+    resource: R,
+    resourceId: number
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
-        resource
+      resource
     )}s/${resourceId}`;
     const results = await this.search({
       customerId,
@@ -393,12 +397,12 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     }
 
     throw new ResourceNotFoundError(
-        `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
+      `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
     );
   }
 
   public getService<T extends serviceNames>(
-      serviceName: T
+    serviceName: T
   ): InstanceType<services[T]> {
     const cachedService = this.serviceCache.get(serviceName);
 
@@ -410,7 +414,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     if (!(rpcServiceConstructor.prototype instanceof rpc.Service)) {
       throw new InvalidRPCServiceError(
-          `Service with serviceName ${serviceName} does not support remote procedure calls`
+        `Service with serviceName ${serviceName} does not support remote procedure calls`
       );
     }
 

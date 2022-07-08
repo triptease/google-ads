@@ -46,7 +46,7 @@ const sqlstring_1 = __importDefault(require("sqlstring"));
 const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
-const $protobuf = __importStar(require("protobufjs"));
+const protobufjs_1 = require("protobufjs");
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
@@ -65,6 +65,12 @@ const createServiceCache = () => {
         set: (serviceName, service) => {
             serviceCache[serviceName] = service;
         },
+        clear: () => {
+            for (const serviceName of Object.keys(serviceCache)) {
+                serviceCache[serviceName].end();
+                delete serviceCache[serviceName];
+            }
+        }
     };
 };
 exports.createServiceCache = createServiceCache;
@@ -124,16 +130,25 @@ class GoogleAdsClient {
     getRpcImpl(serviceName) {
         var _a;
         const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
+        let call;
         return (method, requestData, callback) => {
+            if (method === null && requestData === null && callback == null) { // Called by rpc.Service.end
+                if (call) {
+                    call.cancel();
+                }
+                return;
+            }
             const client = this.clientPool.getClient();
-            client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
+            call = client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
+                call = undefined;
                 if (isServiceError(err)) {
                     err = new GaClientError(err);
                 }
                 callback(err, value);
             });
+            return call;
         };
     }
     async getFieldsForTable(tableName) {
@@ -229,6 +244,9 @@ class GoogleAdsClient {
             return yield __await(void 0);
         });
     }
+    stop() {
+        return this.serviceCache.clear();
+    }
     async findOne(customerId, resource, resourceId) {
         const resourceName = `customers/${customerId}/${(0, lodash_1.camelCase)(resource)}s/${resourceId}`;
         const results = await this.search({
@@ -250,7 +268,7 @@ class GoogleAdsClient {
             return cachedService;
         }
         const rpcServiceConstructor = services[serviceName];
-        if (!(rpcServiceConstructor.prototype instanceof $protobuf.rpc.Service)) {
+        if (!(rpcServiceConstructor.prototype instanceof protobufjs_1.rpc.Service)) {
             throw new InvalidRPCServiceError(`Service with serviceName ${serviceName} does not support remote procedure calls`);
         }
         const rpcImplementation = this.getRpcImpl(serviceName);

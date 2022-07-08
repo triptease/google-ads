@@ -152,6 +152,9 @@ class MockGoogleAdsClient {
         }
         return resources;
     }
+    stop() {
+        //Do nothing
+    }
     getNewIdentifer(resourceName, customerId) {
         const id = this.idCounter++;
         return {

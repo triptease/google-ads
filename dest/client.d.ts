@@ -1,7 +1,7 @@
 import { JWTOptions } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import { google } from "../compiled/google-proto";
 import { StatusObject } from "@grpc/grpc-js";
+import { google } from "../compiled/google-proto";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 declare const services: typeof google.ads.googleads.v11.services;
@@ -10,9 +10,13 @@ declare type serviceNames = keyof services;
 declare const resources: typeof google.ads.googleads.v11.resources;
 declare type resources = typeof resources;
 declare type resourceNames = keyof resources;
+export interface Stoppable {
+    stop(): void;
+}
 export interface IServiceCache {
     set<T extends serviceNames>(serviceName: T, service: InstanceType<services[T]>): void;
     get<T extends serviceNames>(serviceName: T): InstanceType<services[T]> | undefined;
+    clear(): void;
 }
 export declare const createServiceCache: () => IServiceCache;
 export interface GoogleAdsClientOptions {
@@ -39,7 +43,7 @@ export interface ClientSearchParams<R extends resourceNames> {
     orderByDirection?: "ASC" | "DESC";
     limit?: number;
 }
-export interface IGoogleAdsClient {
+export interface IGoogleAdsClient extends Stoppable {
     getMccAccountId(): string;
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
     findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
@@ -74,6 +78,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     private buildSearchSql;
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
     searchGenerator<R extends resourceNames>(params: ClientSearchParams<R>): AsyncIterable<InstanceType<resources[R]>>;
+    stop(): void;
     findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }

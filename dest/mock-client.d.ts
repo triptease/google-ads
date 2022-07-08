@@ -9,6 +9,7 @@ export declare class MockGoogleAdsClient implements IGoogleAdsClient {
     findOne(customerId: string, resource: string, resourceId: number): Promise<any>;
     getService(serviceName: string): any;
     search(params: ClientSearchParams<any>): Promise<any>;
+    stop(): void;
     private getNewIdentifer;
     private getServerGeneratedOptions;
 }
