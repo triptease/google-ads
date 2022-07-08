@@ -328,6 +328,7 @@ describe("GoogleAdsClient", () => {
         set: jest.fn((serviceName, service) =>
           testServiceCache.set(serviceName, service)
         ),
+        stop: jest.fn(async () => testServiceCache.stop())
       };
 
       const localSettings = Object.assign({}, settings, {
@@ -342,18 +343,21 @@ describe("GoogleAdsClient", () => {
       );
 
       service = client.getService("CampaignService");
+      client.stop();
 
       // Total number of sets should be 1
       expect(serviceCacheWrapper.set).toBeCalledTimes(1);
       expect(service).toBeInstanceOf(
         google.ads.googleads.v11.services.CampaignService
       );
+      expect(serviceCacheWrapper.stop).toBeCalledTimes(1);
     });
 
     it("should allow a bypass service cache", async () => {
       const serviceCacheBypass: IServiceCache = {
         get: jest.fn(() => undefined),
         set: jest.fn(() => {}),
+        stop:jest.fn(async () => {}),
       };
 
       const localSettings = Object.assign({}, settings, {
@@ -368,12 +372,14 @@ describe("GoogleAdsClient", () => {
       );
 
       service = client.getService("CampaignService");
+      client.stop();
 
       // Total number of sets should be 2
       expect(serviceCacheBypass.set).toBeCalledTimes(2);
       expect(service).toBeInstanceOf(
         google.ads.googleads.v11.services.CampaignService
       );
+      expect(serviceCacheBypass.stop).toBeCalledTimes(1);
     });
   });
 });

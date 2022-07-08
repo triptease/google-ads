@@ -1,13 +1,15 @@
 import SqlString from "sqlstring";
-import { JWT, JWTOptions, OAuth2Client } from "google-auth-library";
+import {JWT, JWTOptions} from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
-import _, { camelCase, snakeCase } from "lodash";
+import {StatusObject} from "@grpc/grpc-js";
+import {camelCase, snakeCase} from "lodash";
 import * as $protobuf from "protobufjs";
-import { google } from "../compiled/google-proto";
-import { extract } from "./extract";
-import { StatusObject } from "@grpc/grpc-js";
-import { Status } from "@grpc/grpc-js/build/src/constants";
-import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import {rpc} from "protobufjs";
+import {google} from "../compiled/google-proto";
+import {extract} from "./extract";
+import {Status} from "@grpc/grpc-js/build/src/constants";
+import {ServiceClient} from "@grpc/grpc-js/build/src/make-client";
+
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v11";
@@ -22,7 +24,11 @@ type resourceNames = keyof resources;
 
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 
-export interface IServiceCache {
+export interface Stoppable {
+  stop(): Promise<void>;
+}
+
+export interface IServiceCache extends Stoppable {
   set<T extends serviceNames>(
     serviceName: T,
     service: InstanceType<services[T]>
@@ -37,7 +43,7 @@ export const createServiceCache = (): IServiceCache => {
 
   return {
     get: (serviceName) => {
-      if (serviceCache[serviceName]) {
+      if (serviceCache[serviceName]) {//TODO: Check that it is not stopped
         return serviceCache[serviceName] as InstanceType<
           services[typeof serviceName]
         >;
@@ -46,6 +52,11 @@ export const createServiceCache = (): IServiceCache => {
     set: (serviceName, service) => {
       serviceCache[serviceName] = service as ServiceCache[typeof serviceName];
     },
+    stop: async () => {
+      for (let service of Object.values(serviceCache) as rpc.Service[]) {
+        service.end();
+      }
+    }
   };
 };
 
@@ -78,7 +89,7 @@ export interface ClientSearchParams<R extends resourceNames> {
   limit?: number;
 }
 
-export interface IGoogleAdsClient {
+export interface IGoogleAdsClient extends Stoppable {
   getMccAccountId(): string;
   search<R extends resourceNames>(
     params: ClientSearchParams<R>
@@ -190,6 +201,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     const timeout = this.options?.timeout;
 
     return (method, requestData, callback) => {
+      if (!method) {
+        return;
+      }
       const client = this.clientPool.getClient();
       client.makeUnaryRequest(
         `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`,
@@ -382,7 +396,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     const rpcServiceConstructor = services[serviceName];
 
-    if (!(rpcServiceConstructor.prototype instanceof $protobuf.rpc.Service)) {
+    if (!(rpcServiceConstructor.prototype instanceof rpc.Service)) {
       throw new InvalidRPCServiceError(
         `Service with serviceName ${serviceName} does not support remote procedure calls`
       );
@@ -393,6 +407,10 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     this.serviceCache.set(serviceName, service as InstanceType<services[T]>);
     return service as InstanceType<services[T]>;
+  }
+
+  public async stop(): Promise<void> {
+    return this.serviceCache.stop();
   }
 }
 

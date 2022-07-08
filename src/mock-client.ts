@@ -218,6 +218,10 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
     return resources;
   }
 
+  public async stop(): Promise<void> {
+    return Promise.resolve();
+  }
+
   private getNewIdentifer(resourceName: string, customerId: string) {
     const id = this.idCounter++;
     return {
