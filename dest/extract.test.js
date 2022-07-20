@@ -55,7 +55,9 @@ describe("flatten", () => {
         // create a simple protobuf object with a campaign id in it
         const id = long_1.default.fromNumber(12345);
         const campaign = new google_proto_1.google.ads.googleads.v11.resources.Campaign({ id });
-        const row = new google_proto_1.google.ads.googleads.v11.services.GoogleAdsRow({ campaign });
+        const row = new google_proto_1.google.ads.googleads.v11.services.GoogleAdsRow({
+            campaign,
+        });
         const extractedRow = (0, extract_1.extract)(row, ["campaign"]);
         expect(extractedRow.campaign.id).toBe(12345);
         const extractedCampaign = (0, extract_1.extract)(extractedRow.campaign, ["id"]);

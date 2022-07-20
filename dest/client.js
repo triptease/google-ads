@@ -70,7 +70,7 @@ const createServiceCache = () => {
                 serviceCache[serviceName].end();
                 delete serviceCache[serviceName];
             }
-        }
+        },
     };
 };
 exports.createServiceCache = createServiceCache;
@@ -132,7 +132,8 @@ class GoogleAdsClient {
         const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
         let call;
         return (method, requestData, callback) => {
-            if (method === null && requestData === null && callback == null) { // Called by rpc.Service.end
+            if (method === null && requestData === null && callback == null) {
+                // Called by rpc.Service.end
                 if (call) {
                     call.cancel();
                 }

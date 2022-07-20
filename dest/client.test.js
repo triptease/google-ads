@@ -261,7 +261,7 @@ describe("GoogleAdsClient", () => {
             const serviceCacheWrapper = {
                 get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
                 set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
-                clear: jest.fn(async () => testServiceCache.clear())
+                clear: jest.fn(async () => testServiceCache.clear()),
             };
             const client = new client_1.GoogleAdsClient(Object.assign(Object.assign({}, settings), { serviceCache: serviceCacheWrapper }));
             const service = client.getService("CampaignService");
@@ -276,7 +276,7 @@ describe("GoogleAdsClient", () => {
             const serviceCacheWrapper = {
                 get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
                 set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
-                clear: jest.fn(() => testServiceCache.clear())
+                clear: jest.fn(() => testServiceCache.clear()),
             };
             const localSettings = Object.assign({}, settings, {
                 serviceCache: serviceCacheWrapper,

@@ -11,10 +11,10 @@
   },
   "packageManager": "yarn@3.0.2",
   "dependencies": {
-    "@grpc/grpc-js": "1.4.4",
+    "@grpc/grpc-js": "^1.6.7",
     "google-auth-library": "^7.10.2",
     "lodash": "^4.17.21",
-    "protobufjs": "^6.11.2",
+    "protobufjs": "~6.11.3",
     "sqlstring": "^2.3.2"
   },
   "devDependencies": {
