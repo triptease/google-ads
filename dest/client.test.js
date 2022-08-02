@@ -84,6 +84,22 @@ describe("GoogleAdsClient", () => {
                 query: `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
             });
         });
+        it("should produce SQL to search using only the passed fields", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.findOne("123", "Campaign", 456, [
+                "some_field",
+                "other_field",
+            ]);
+            expect(services.GoogleAdsFieldService.searchGoogleAdsFields).not.toHaveBeenCalled();
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: `SELECT some_field, other_field FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
+            });
+        });
         it("should throw an error if no resource is found", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const services = buildMockGetServices();
@@ -113,6 +129,27 @@ describe("GoogleAdsClient", () => {
                 pageSize: 1000,
                 pageToken: null,
                 query: `SELECT campaign.status FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
+            });
+        });
+        it("should produce SQL to search using only the passed fields", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.search({
+                customerId: "123",
+                resource: "Campaign",
+                filters: {
+                    status: ["ENABLED", "PAUSED"],
+                    name: "test",
+                },
+                fields: ["some_field", "other_field"],
+            });
+            expect(services.GoogleAdsFieldService.searchGoogleAdsFields).not.toHaveBeenCalled();
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: `SELECT some_field, other_field FROM campaign WHERE campaign.status in ('ENABLED','PAUSED') and campaign.name = 'test'`,
             });
         });
         it("should produce SQL basic", async () => {

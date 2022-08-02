@@ -15,7 +15,8 @@
     "google-auth-library": "^7.10.2",
     "lodash": "^4.17.21",
     "protobufjs": "~6.11.3",
-    "sqlstring": "^2.3.2"
+    "sqlstring": "^2.3.2",
+    "winston": "^3.7.2"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",

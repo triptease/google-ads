@@ -1,6 +1,8 @@
 node_modules
 googleapis
 
+.idea
+
 # Yarn ignores for non-zero-install config
 **/.yarn/*
 !**/.yarn/patches

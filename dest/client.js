@@ -222,10 +222,13 @@ class GoogleAdsClient {
         return results;
     }
     searchGenerator(params) {
+        var _a, _b;
         return __asyncGenerator(this, arguments, function* searchGenerator_1() {
             const tableName = (0, lodash_1.snakeCase)(params.resource);
             const objName = (0, lodash_1.camelCase)(params.resource);
-            const fields = yield __await(this.getFieldsForTable(tableName));
+            const fields = ((_a = params.fields) === null || _a === void 0 ? void 0 : _a.length)
+                ? params.fields.map((f) => ({ name: f }))
+                : yield __await(this.getFieldsForTable(tableName));
             const googleAdsService = this.getService("GoogleAdsService");
             let token = null;
             do {
@@ -236,7 +239,17 @@ class GoogleAdsClient {
                     pageToken: token,
                     pageSize: 1000,
                 };
-                const result = yield __await(googleAdsService.search(request));
+                let result;
+                try {
+                    result = yield __await(googleAdsService.search(request));
+                }
+                catch (error) {
+                    (_b = this.options.logger) === null || _b === void 0 ? void 0 : _b.error("Error occurred during search", {
+                        request,
+                        error,
+                    });
+                    throw error;
+                }
                 token = result.nextPageToken;
                 for (const field of result.results) {
                     yield yield __await(field[objName]);
@@ -248,7 +261,7 @@ class GoogleAdsClient {
     stop() {
         return this.serviceCache.clear();
     }
-    async findOne(customerId, resource, resourceId) {
+    async findOne(customerId, resource, resourceId, fields) {
         const resourceName = `customers/${customerId}/${(0, lodash_1.camelCase)(resource)}s/${resourceId}`;
         const results = await this.search({
             customerId,
@@ -257,6 +270,7 @@ class GoogleAdsClient {
             filters: {
                 resourceName: [resourceName],
             },
+            fields,
         });
         if (results.length > 0) {
             return results[0];

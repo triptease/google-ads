@@ -9,6 +9,7 @@ import { google } from "../compiled/google-proto";
 import { extract } from "./extract";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { Logger } from "winston";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v11";
@@ -70,6 +71,7 @@ export interface GoogleAdsClientOptions {
   timeout?: number;
   clientPoolSize?: number;
   serviceCache?: IServiceCache;
+  logger?: Logger;
 }
 
 export class ResourceNotFoundError extends Error {}
@@ -87,6 +89,7 @@ export interface ClientSearchParams<R extends resourceNames> {
       | number[]
       | { raw: string };
   };
+  fields?: string[];
   orderBy?: keyof InstanceType<resources[R]>;
   orderByDirection?: "ASC" | "DESC";
   limit?: number;
@@ -100,7 +103,8 @@ export interface IGoogleAdsClient extends Stoppable {
   findOne<R extends resourceNames>(
     customerId: string,
     resource: R,
-    resourceId: number
+    resourceId: number,
+    fields?: string[]
   ): Promise<InstanceType<resources[R]>>;
   getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
@@ -339,7 +343,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   ): AsyncIterable<InstanceType<resources[R]>> {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
-    const fields = await this.getFieldsForTable(tableName);
+    const fields = params.fields?.length
+      ? params.fields.map((f) => ({ name: f }))
+      : await this.getFieldsForTable(tableName);
     const googleAdsService = this.getService("GoogleAdsService");
     let token: string | null = null;
 
@@ -360,7 +366,16 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         pageSize: 1000,
       };
 
-      const result = await googleAdsService.search(request);
+      let result: google.ads.googleads.v11.services.SearchGoogleAdsResponse;
+      try {
+        result = await googleAdsService.search(request);
+      } catch (error) {
+        this.options.logger?.error("Error occurred during search", {
+          request,
+          error,
+        });
+        throw error;
+      }
 
       token = result.nextPageToken as string;
 
@@ -378,7 +393,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   public async findOne<R extends resourceNames>(
     customerId: string,
     resource: R,
-    resourceId: number
+    resourceId: number,
+    fields?: string[]
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
       resource
@@ -390,6 +406,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       filters: {
         resourceName: [resourceName],
       } as any,
+      fields,
     });
 
     if (results.length > 0) {

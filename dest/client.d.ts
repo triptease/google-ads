@@ -4,6 +4,7 @@ import { StatusObject } from "@grpc/grpc-js";
 import { google } from "../compiled/google-proto";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
+import { Logger } from "winston";
 declare const services: typeof google.ads.googleads.v11.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
@@ -26,6 +27,7 @@ export interface GoogleAdsClientOptions {
     timeout?: number;
     clientPoolSize?: number;
     serviceCache?: IServiceCache;
+    logger?: Logger;
 }
 export declare class ResourceNotFoundError extends Error {
 }
@@ -39,6 +41,7 @@ export interface ClientSearchParams<R extends resourceNames> {
             raw: string;
         };
     };
+    fields?: string[];
     orderBy?: keyof InstanceType<resources[R]>;
     orderByDirection?: "ASC" | "DESC";
     limit?: number;
@@ -46,7 +49,7 @@ export interface ClientSearchParams<R extends resourceNames> {
 export interface IGoogleAdsClient extends Stoppable {
     getMccAccountId(): string;
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
-    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
+    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[]): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export interface ClientCreator {
@@ -79,7 +82,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
     searchGenerator<R extends resourceNames>(params: ClientSearchParams<R>): AsyncIterable<InstanceType<resources[R]>>;
     stop(): void;
-    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number): Promise<InstanceType<resources[R]>>;
+    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[]): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {
