@@ -5,6 +5,7 @@ import { google } from "../compiled/google-proto";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 import { Logger } from "winston";
+import { Statter } from "./statter";
 declare const services: typeof google.ads.googleads.v11.services;
 declare type services = typeof services;
 declare type serviceNames = keyof services;
@@ -28,6 +29,7 @@ export interface GoogleAdsClientOptions {
     clientPoolSize?: number;
     serviceCache?: IServiceCache;
     logger?: Logger;
+    statter?: Statter;
 }
 export declare class ResourceNotFoundError extends Error {
 }
@@ -73,6 +75,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     private readonly serviceCache;
     private readonly metadata;
     private readonly clientPool;
+    private readonly statter;
     constructor(options: GoogleAdsClientOptions);
     getMccAccountId(): string;
     private getRpcImpl;

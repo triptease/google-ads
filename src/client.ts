@@ -10,6 +10,7 @@ import { extract } from "./extract";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 import { Logger } from "winston";
+import { NoOpStatter, Statter } from "./statter";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v11";
@@ -72,6 +73,7 @@ export interface GoogleAdsClientOptions {
   clientPoolSize?: number;
   serviceCache?: IServiceCache;
   logger?: Logger;
+  statter?: Statter;
 }
 
 export class ResourceNotFoundError extends Error {}
@@ -184,6 +186,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   private readonly serviceCache: IServiceCache;
   private readonly metadata: grpc.Metadata;
   private readonly clientPool: ClientPool;
+  private readonly statter: Statter;
 
   constructor(options: GoogleAdsClientOptions) {
     this.options = options;
@@ -198,6 +201,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     );
 
     this.serviceCache = this.options.serviceCache ?? createServiceCache();
+    this.statter = options.statter ?? new NoOpStatter();
   }
 
   public getMccAccountId(): string {
@@ -217,6 +221,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         return;
       }
       const client = this.clientPool.getClient();
+      const thisStatter = this.statter;
+
       call = client.makeUnaryRequest(
         `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`,
         (value: Uint8Array) => Buffer.from(value),
@@ -229,7 +235,21 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         function (err, value) {
           call = undefined;
           if (isServiceError(err)) {
+            thisStatter.increment("google_ads_grpc", 1, [
+              `version:${GOOGLE_ADS_VERSION}`,
+              `outcome:error`,
+              `service:${serviceName}`,
+              `method:${method.name}`,
+            ]);
+
             err = new GaClientError(err);
+          } else {
+            thisStatter.increment("google_ads_grpc", 1, [
+              `version:${GOOGLE_ADS_VERSION}`,
+              `outcome:success`,
+              `service:${serviceName}`,
+              `method:${method.name}`,
+            ]);
           }
           callback(err, value);
         }

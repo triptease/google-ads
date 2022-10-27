@@ -49,6 +49,7 @@ const lodash_1 = require("lodash");
 const protobufjs_1 = require("protobufjs");
 const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
+const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v11";
 const services = google_proto_1.google.ads.googleads.v11.services;
@@ -116,13 +117,14 @@ class ClientPool {
 exports.ClientPool = ClientPool;
 class GoogleAdsClient {
     constructor(options) {
-        var _a;
+        var _a, _b;
         this.options = options;
         this.metadata = new grpc.Metadata();
         this.metadata.add("developer-token", this.options.developerToken);
         this.metadata.add("login-customer-id", this.options.mccAccountId);
         this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
         this.serviceCache = (_a = this.options.serviceCache) !== null && _a !== void 0 ? _a : (0, exports.createServiceCache)();
+        this.statter = (_b = options.statter) !== null && _b !== void 0 ? _b : new statter_1.NoOpStatter();
     }
     getMccAccountId() {
         return this.options.mccAccountId;
@@ -140,12 +142,27 @@ class GoogleAdsClient {
                 return;
             }
             const client = this.clientPool.getClient();
+            const thisStatter = this.statter;
             call = client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
                 call = undefined;
                 if (isServiceError(err)) {
+                    thisStatter.increment("google_ads_grpc", 1, [
+                        `version:${GOOGLE_ADS_VERSION}`,
+                        `outcome:error`,
+                        `service:${serviceName}`,
+                        `method:${method.name}`,
+                    ]);
                     err = new GaClientError(err);
+                }
+                else {
+                    thisStatter.increment("google_ads_grpc", 1, [
+                        `version:${GOOGLE_ADS_VERSION}`,
+                        `outcome:success`,
+                        `service:${serviceName}`,
+                        `method:${method.name}`,
+                    ]);
                 }
                 callback(err, value);
             });
