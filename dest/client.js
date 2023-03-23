@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -51,9 +55,9 @@ const google_proto_1 = require("../compiled/google-proto");
 const extract_1 = require("./extract");
 const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v11";
-const services = google_proto_1.google.ads.googleads.v11.services;
-const resources = google_proto_1.google.ads.googleads.v11.resources;
+const GOOGLE_ADS_VERSION = "v12";
+const services = google_proto_1.google.ads.googleads.v12.services;
+const resources = google_proto_1.google.ads.googleads.v12.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
     const serviceCache = {};
@@ -221,18 +225,25 @@ class GoogleAdsClient {
             .join(" ");
     }
     async search(params) {
-        var e_1, _a;
+        var _a, e_1, _b, _c;
         const results = [];
         try {
-            for (var _b = __asyncValues(this.searchGenerator(params)), _c; _c = await _b.next(), !_c.done;) {
-                const x = _c.value;
-                results.push(x);
+            for (var _d = true, _e = __asyncValues(this.searchGenerator(params)), _f; _f = await _e.next(), _a = _f.done, !_a;) {
+                _c = _f.value;
+                _d = false;
+                try {
+                    const x = _c;
+                    results.push(x);
+                }
+                finally {
+                    _d = true;
+                }
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (_c && !_c.done && (_a = _b.return)) await _a.call(_b);
+                if (!_d && !_a && (_b = _e.return)) await _b.call(_e);
             }
             finally { if (e_1) throw e_1.error; }
         }
@@ -329,7 +340,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v11.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v12.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;

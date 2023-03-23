@@ -9,7 +9,7 @@
     "start:dev": "tsc --watch",
     "test": "jest"
   },
-  "packageManager": "yarn@3.0.2",
+  "packageManager": "yarn@3.5.0",
   "dependencies": {
     "@grpc/grpc-js": "^1.6.7",
     "google-auth-library": "^7.10.2",

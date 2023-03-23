@@ -6,12 +6,12 @@ import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 import { Logger } from "winston";
 import { Statter } from "./statter";
-declare const services: typeof google.ads.googleads.v11.services;
-declare type services = typeof services;
-declare type serviceNames = keyof services;
-declare const resources: typeof google.ads.googleads.v11.resources;
-declare type resources = typeof resources;
-declare type resourceNames = keyof resources;
+declare const services: typeof google.ads.googleads.v12.services;
+type services = typeof services;
+type serviceNames = keyof services;
+declare const resources: typeof google.ads.googleads.v12.resources;
+type resources = typeof resources;
+type resourceNames = keyof resources;
 export interface Stoppable {
     stop(): void;
 }
@@ -89,7 +89,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {
-    firstError: google.ads.googleads.v11.errors.IErrorCode | null | undefined;
+    firstError: google.ads.googleads.v12.errors.IErrorCode | null | undefined;
     code: Status;
     details: string;
     metadata: grpc.Metadata;

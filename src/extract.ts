@@ -62,7 +62,7 @@ export type extract<T, F extends keyof T | void = void> = Require<
   FlattenExtractObject<T>,
   F
 >;
-export function extract<T, F extends keyof T | void = void>(
+export function extract<T, F extends keyof T>(
   obj: T,
   requiredFields: F[] = []
 ): Require<FlattenExtractObject<T>, F> {
@@ -72,7 +72,7 @@ export function extract<T, F extends keyof T | void = void>(
     const realValue = field in flatObject ? flatObject[field] : undefined;
 
     if (realValue == null || realValue === undefined) {
-      throw new Error(`${field} does not exist on object`);
+      throw new Error(`${field.toString()} does not exist on object`);
     }
   });
 

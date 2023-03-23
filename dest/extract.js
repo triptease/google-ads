@@ -39,7 +39,7 @@ function extract(obj, requiredFields = []) {
     requiredFields.forEach((field) => {
         const realValue = field in flatObject ? flatObject[field] : undefined;
         if (realValue == null || realValue === undefined) {
-            throw new Error(`${field} does not exist on object`);
+            throw new Error(`${field.toString()} does not exist on object`);
         }
     });
     return flatObject;

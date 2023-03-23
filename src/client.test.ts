@@ -30,9 +30,9 @@ function buildMockGetServices(pages: number = 1) {
             { name: "change_status.last_change_date_time", selectable: true },
           ],
           totalResultsCount: 1000,
-        } as Partial<google.ads.googleads.v11.services.SearchGoogleAdsFieldsResponse>;
+        } as Partial<google.ads.googleads.v12.services.SearchGoogleAdsFieldsResponse>;
       }),
-    } as Partial<google.ads.googleads.v11.services.GoogleAdsFieldService>,
+    } as Partial<google.ads.googleads.v12.services.GoogleAdsFieldService>,
 
     GoogleAdsService: {
       search: jest.fn(async () => {
@@ -44,9 +44,9 @@ function buildMockGetServices(pages: number = 1) {
               campaign: { name: "foo " + pageNumber },
             },
           ],
-        } as Partial<google.ads.googleads.v11.services.SearchGoogleAdsResponse>;
+        } as Partial<google.ads.googleads.v12.services.SearchGoogleAdsResponse>;
       }),
-    } as Partial<google.ads.googleads.v11.services.GoogleAdsService>,
+    } as Partial<google.ads.googleads.v12.services.GoogleAdsService>,
   };
 
   const getServices = (serviceName: any) => {
@@ -364,13 +364,13 @@ describe("GoogleAdsClient", () => {
       const client = new GoogleAdsClient(settings);
       const service = client.getService("CampaignService");
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v11.services.CampaignService
+        google.ads.googleads.v12.services.CampaignService
       );
     });
   });
 
   describe("stop", () => {
-    const services = google.ads.googleads.v11.services;
+    const services = google.ads.googleads.v12.services;
     type services = typeof services;
     type serviceNames = keyof services;
 
@@ -416,7 +416,7 @@ describe("GoogleAdsClient", () => {
       let service = client.getService("CampaignService");
 
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v11.services.CampaignService
+        google.ads.googleads.v12.services.CampaignService
       );
 
       service = client.getService("CampaignService");
@@ -424,7 +424,7 @@ describe("GoogleAdsClient", () => {
       // Total number of sets should be 1
       expect(serviceCacheWrapper.set).toBeCalledTimes(1);
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v11.services.CampaignService
+        google.ads.googleads.v12.services.CampaignService
       );
     });
 
@@ -443,7 +443,7 @@ describe("GoogleAdsClient", () => {
       let service = client.getService("CampaignService");
 
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v11.services.CampaignService
+        google.ads.googleads.v12.services.CampaignService
       );
 
       service = client.getService("CampaignService");
@@ -452,7 +452,7 @@ describe("GoogleAdsClient", () => {
       // Total number of sets should be 2
       expect(serviceCacheBypass.set).toBeCalledTimes(2);
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v11.services.CampaignService
+        google.ads.googleads.v12.services.CampaignService
       );
       expect(serviceCacheBypass.clear).toBeCalledTimes(1);
     });

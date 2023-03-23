@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -15,11 +19,11 @@ const google_proto_1 = require("../compiled/google-proto");
 var GoogleAds;
 (function (GoogleAds) {
     GoogleAds.protobuf = google_proto_1.google.protobuf;
-    GoogleAds.services = google_proto_1.google.ads.googleads.v11.services;
-    GoogleAds.resources = google_proto_1.google.ads.googleads.v11.resources;
-    GoogleAds.enums = google_proto_1.google.ads.googleads.v11.enums;
-    GoogleAds.common = google_proto_1.google.ads.googleads.v11.common;
-    GoogleAds.errors = google_proto_1.google.ads.googleads.v11.errors;
+    GoogleAds.services = google_proto_1.google.ads.googleads.v12.services;
+    GoogleAds.resources = google_proto_1.google.ads.googleads.v12.resources;
+    GoogleAds.enums = google_proto_1.google.ads.googleads.v12.enums;
+    GoogleAds.common = google_proto_1.google.ads.googleads.v12.common;
+    GoogleAds.errors = google_proto_1.google.ads.googleads.v12.errors;
 })(GoogleAds = exports.GoogleAds || (exports.GoogleAds = {}));
 __exportStar(require("./client"), exports);
 __exportStar(require("./extract"), exports);
