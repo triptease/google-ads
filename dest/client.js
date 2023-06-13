@@ -128,6 +128,7 @@ class GoogleAdsClient {
         this.metadata.add("login-customer-id", this.options.mccAccountId);
         this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
         this.serviceCache = (_a = this.options.serviceCache) !== null && _a !== void 0 ? _a : (0, exports.createServiceCache)();
+        this.longRunningOps = null;
         this.statter = (_b = options.statter) !== null && _b !== void 0 ? _b : new statter_1.NoOpStatter();
     }
     getMccAccountId() {
@@ -147,7 +148,10 @@ class GoogleAdsClient {
             }
             const client = this.clientPool.getClient();
             const thisStatter = this.statter;
-            call = client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
+            const methodName = serviceName !== "Operations"
+                ? `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`
+                : `/google.longrunning.Operations/${method.name}`;
+            call = client.makeUnaryRequest(methodName, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
                 call = undefined;
@@ -318,6 +322,12 @@ class GoogleAdsClient {
         const service = new rpcServiceConstructor(rpcImplementation);
         this.serviceCache.set(serviceName, service);
         return service;
+    }
+    getLongRunningOperationsService() {
+        if (this.longRunningOps === null) {
+            this.longRunningOps = new google_proto_1.google.longrunning.Operations(this.getRpcImpl("Operations"));
+        }
+        return this.longRunningOps;
     }
 }
 exports.GoogleAdsClient = GoogleAdsClient;
