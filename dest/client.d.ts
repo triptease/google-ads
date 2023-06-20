@@ -47,6 +47,7 @@ export interface ClientSearchParams<R extends resourceNames> {
     orderBy?: keyof InstanceType<resources[R]>;
     orderByDirection?: "ASC" | "DESC";
     limit?: number;
+    includeDrafts?: boolean;
 }
 export interface IGoogleAdsClient extends Stoppable {
     getMccAccountId(): string;

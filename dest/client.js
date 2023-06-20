@@ -193,7 +193,7 @@ class GoogleAdsClient {
         }
         return this.fieldsCache.filter((f) => f.name.startsWith(`${tableName}.`));
     }
-    buildSearchSql(tableName, fields, filters = {}, orderBy, orderByDirection = "ASC", limit) {
+    buildSearchSql(tableName, fields, filters = {}, orderBy, orderByDirection = "ASC", limit, includeDrafts) {
         const fieldSql = fields.map((f) => f.name).join(", ");
         const wheres = [];
         // tslint:disable-next-line:forin
@@ -224,6 +224,7 @@ class GoogleAdsClient {
             `${wheresSql ? `WHERE ${wheresSql}` : ""}`,
             `${orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""}`,
             `${limit ? `LIMIT ${limit}` : ""}`,
+            `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`
         ]
             .filter((seg) => !!seg)
             .join(" ");
@@ -264,7 +265,7 @@ class GoogleAdsClient {
             const googleAdsService = this.getService("GoogleAdsService");
             let token = null;
             do {
-                const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit);
+                const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit, params.includeDrafts || false);
                 const request = {
                     customerId: params.customerId,
                     query,

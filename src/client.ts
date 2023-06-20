@@ -95,6 +95,7 @@ export interface ClientSearchParams<R extends resourceNames> {
   orderBy?: keyof InstanceType<resources[R]>;
   orderByDirection?: "ASC" | "DESC";
   limit?: number;
+  includeDrafts?: boolean;
 }
 
 export interface IGoogleAdsClient extends Stoppable {
@@ -308,7 +309,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     } = {},
     orderBy: string | undefined,
     orderByDirection: "ASC" | "DESC" = "ASC",
-    limit: number | undefined
+    limit: number | undefined,
+    includeDrafts: boolean
   ) {
     const fieldSql = fields.map((f) => f.name).join(", ");
 
@@ -351,6 +353,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""
       }`,
       `${limit ? `LIMIT ${limit}` : ""}`,
+      `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`
     ]
       .filter((seg) => !!seg)
       .join(" ");
@@ -385,7 +388,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         params.filters,
         params.orderBy ? snakeCase(params.orderBy as string) : undefined,
         params.orderByDirection,
-        params.limit
+        params.limit,
+        params.includeDrafts || false
       );
 
       const request = {

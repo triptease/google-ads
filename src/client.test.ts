@@ -343,6 +343,28 @@ describe("GoogleAdsClient", () => {
       );
     });
 
+    it("should add parameter to include draft resources if specified", async () => {
+      const client = new GoogleAdsClient(settings);
+      const services = buildMockGetServices();
+      client.getService = services;
+
+      await client.search({
+        customerId: "123",
+        resource: "Campaign",
+        filters: {
+          status: "ENABLED",
+          resourceName: "1234",
+        },
+        includeDrafts: true
+      });
+
+      expect(services.GoogleAdsService.search).toBeCalledWith(
+        expect.objectContaining({
+          query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234' PARAMETERS include_drafts = true`,
+        })
+      );
+    });
+
     it("should return all results if paginated", async () => {
       const client = new GoogleAdsClient(settings);
       client.getService = buildMockGetServices(2);
