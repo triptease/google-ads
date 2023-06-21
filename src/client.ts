@@ -427,7 +427,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     customerId: string,
     resource: R,
     resourceId: number,
-    fields?: string[]
+    fields?: string[],
+    includeDrafts?: boolean,
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
       resource
@@ -440,6 +441,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         resourceName: [resourceName],
       } as any,
       fields,
+      includeDrafts
     });
 
     if (results.length > 0) {

@@ -132,6 +132,25 @@ describe("GoogleAdsClient", () => {
       });
     });
 
+    it("should include drafts in SQL params when specified", async () => {
+      const client = new GoogleAdsClient(settings);
+      const services = buildMockGetServices();
+      client.getService = services;
+
+      await client.findOne("123", "Campaign", 456, ['campaign.status'], true);
+
+      expect(
+        services.GoogleAdsFieldService.searchGoogleAdsFields
+      ).not.toHaveBeenCalled();
+
+      expect(services.GoogleAdsService.search).toBeCalledWith({
+        customerId: "123",
+        pageSize: 1000,
+        pageToken: null,
+        query: `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456' PARAMETERS include_drafts = true`,
+      });
+    });
+
     it("should throw an error if no resource is found", async () => {
       const client = new GoogleAdsClient(settings);
       const services = buildMockGetServices();
