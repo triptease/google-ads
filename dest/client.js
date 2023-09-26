@@ -105,6 +105,7 @@ class GoogleAdsClient {
     options;
     // Service creation leaks memory, so services are cached and re-used.
     serviceCache;
+    longRunningOps;
     metadata;
     clientPool;
     statter;
@@ -134,7 +135,10 @@ class GoogleAdsClient {
             }
             const client = this.clientPool.getClient();
             const thisStatter = this.statter;
-            call = client.makeUnaryRequest(`/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
+            const methodName = serviceName !== "Operations"
+                ? `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`
+                : `/google.longrunning.Operations/${method.name}`;
+            call = client.makeUnaryRequest(methodName, (value) => Buffer.from(value), (value) => value, requestData, this.metadata, {
                 deadline: timeout ? Date.now() + timeout : undefined,
             }, function (err, value) {
                 call = undefined;
@@ -290,7 +294,7 @@ class GoogleAdsClient {
     }
     getLongRunningOperationsService() {
         if (this.longRunningOps === null) {
-            this.longRunningOps = new google_proto_1.google.longrunning.Operations(this.getRpcImpl("Operations"));
+            this.longRunningOps = new googleads_1.google.longrunning.Operations(this.getRpcImpl("Operations"));
         }
         return this.longRunningOps;
     }
