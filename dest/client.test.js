@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const _1 = require(".");
-const google_proto_1 = require("../compiled/google-proto");
+const googleads_1 = require("../definitions/googleads");
 const client_1 = require("./client");
 const settings = {
     developerToken: "dev-toke",
@@ -318,11 +318,11 @@ describe("GoogleAdsClient", () => {
         it("should get a service", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v12.services.CampaignService);
+            expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
         });
     });
     describe("stop", () => {
-        const services = google_proto_1.google.ads.googleads.v12.services;
+        const services = googleads_1.google.ads.googleads.v14.services;
         it("should clear the cache and end all services when stopped", async () => {
             const testServiceCache = (0, _1.createServiceCache)();
             const serviceCacheWrapper = {
@@ -330,7 +330,10 @@ describe("GoogleAdsClient", () => {
                 set: jest.fn((serviceName, service) => testServiceCache.set(serviceName, service)),
                 clear: jest.fn(async () => testServiceCache.clear()),
             };
-            const client = new client_1.GoogleAdsClient(Object.assign(Object.assign({}, settings), { serviceCache: serviceCacheWrapper }));
+            const client = new client_1.GoogleAdsClient({
+                ...settings,
+                serviceCache: serviceCacheWrapper,
+            });
             const service = client.getService("CampaignService");
             await client.stop();
             expect(serviceCacheWrapper.clear).toBeCalledTimes(1);
@@ -350,11 +353,11 @@ describe("GoogleAdsClient", () => {
             });
             const client = new client_1.GoogleAdsClient(localSettings);
             let service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v12.services.CampaignService);
+            expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
             service = client.getService("CampaignService");
             // Total number of sets should be 1
             expect(serviceCacheWrapper.set).toBeCalledTimes(1);
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v12.services.CampaignService);
+            expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
         });
         it("should allow a bypass service cache", async () => {
             const serviceCacheBypass = {
@@ -367,12 +370,12 @@ describe("GoogleAdsClient", () => {
             });
             const client = new client_1.GoogleAdsClient(localSettings);
             let service = client.getService("CampaignService");
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v12.services.CampaignService);
+            expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
             service = client.getService("CampaignService");
             client.stop();
             // Total number of sets should be 2
             expect(serviceCacheBypass.set).toBeCalledTimes(2);
-            expect(service).toBeInstanceOf(google_proto_1.google.ads.googleads.v12.services.CampaignService);
+            expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
             expect(serviceCacheBypass.clear).toBeCalledTimes(1);
         });
     });

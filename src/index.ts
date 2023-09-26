@@ -1,12 +1,12 @@
-import { google } from "../compiled/google-proto";
+import { google } from "../definitions/googleads";
 
 export namespace GoogleAds {
   export import protobuf = google.protobuf;
-  export import services = google.ads.googleads.v12.services;
-  export import resources = google.ads.googleads.v12.resources;
-  export import enums = google.ads.googleads.v12.enums;
-  export import common = google.ads.googleads.v12.common;
-  export import errors = google.ads.googleads.v12.errors;
+  export import services = google.ads.googleads.v14.services;
+  export import resources = google.ads.googleads.v14.resources;
+  export import enums = google.ads.googleads.v14.enums;
+  export import common = google.ads.googleads.v14.common;
+  export import errors = google.ads.googleads.v14.errors;
 }
 
 export * from "./client";
