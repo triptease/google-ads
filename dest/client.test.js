@@ -100,6 +100,19 @@ describe("GoogleAdsClient", () => {
                 query: `SELECT some_field, other_field FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456'`,
             });
         });
+        it("should include drafts in SQL params when specified", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.findOne("123", "Campaign", 456, ['campaign.status'], true);
+            expect(services.GoogleAdsFieldService.searchGoogleAdsFields).not.toHaveBeenCalled();
+            expect(services.GoogleAdsService.search).toBeCalledWith({
+                customerId: "123",
+                pageSize: 1000,
+                pageToken: null,
+                query: `SELECT campaign.status FROM campaign WHERE campaign.resource_name = 'customers/123/campaigns/456' PARAMETERS include_drafts = true`,
+            });
+        });
         it("should throw an error if no resource is found", async () => {
             const client = new client_1.GoogleAdsClient(settings);
             const services = buildMockGetServices();
@@ -269,6 +282,23 @@ describe("GoogleAdsClient", () => {
             });
             expect(services.GoogleAdsService.search).toBeCalledWith(expect.objectContaining({
                 query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
+            }));
+        });
+        it("should add parameter to include draft resources if specified", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const services = buildMockGetServices();
+            client.getService = services;
+            await client.search({
+                customerId: "123",
+                resource: "Campaign",
+                filters: {
+                    status: "ENABLED",
+                    resourceName: "1234",
+                },
+                includeDrafts: true
+            });
+            expect(services.GoogleAdsService.search).toBeCalledWith(expect.objectContaining({
+                query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234' PARAMETERS include_drafts = true`,
             }));
         });
         it("should return all results if paginated", async () => {

@@ -47,6 +47,7 @@ export interface ClientSearchParams<R extends resourceNames> {
     orderBy?: keyof InstanceType<resources[R]>;
     orderByDirection?: "ASC" | "DESC";
     limit?: number;
+    includeDrafts?: boolean;
 }
 export interface IGoogleAdsClient extends Stoppable {
     getMccAccountId(): string;
@@ -73,6 +74,7 @@ export declare class ClientPool {
 export declare class GoogleAdsClient implements IGoogleAdsClient {
     private readonly options;
     private readonly serviceCache;
+    private longRunningOps;
     private readonly metadata;
     private readonly clientPool;
     private readonly statter;
@@ -85,8 +87,9 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     search<R extends resourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<resources[R]>>>;
     searchGenerator<R extends resourceNames>(params: ClientSearchParams<R>): AsyncIterable<InstanceType<resources[R]>>;
     stop(): void;
-    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[]): Promise<InstanceType<resources[R]>>;
+    findOne<R extends resourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[], includeDrafts?: boolean): Promise<InstanceType<resources[R]>>;
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
+    getLongRunningOperationsService(): google.longrunning.Operations;
 }
 export declare class GaClientError extends Error implements StatusObject {
     firstError: google.ads.googleads.v14.errors.IErrorCode | null | undefined;

@@ -95,6 +95,7 @@ export interface ClientSearchParams<R extends resourceNames> {
   orderBy?: keyof InstanceType<resources[R]>;
   orderByDirection?: "ASC" | "DESC";
   limit?: number;
+  includeDrafts?: boolean;
 }
 
 export interface IGoogleAdsClient extends Stoppable {
@@ -184,6 +185,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   private readonly options: GoogleAdsClientOptions;
   // Service creation leaks memory, so services are cached and re-used.
   private readonly serviceCache: IServiceCache;
+  private longRunningOps: google.longrunning.Operations | null;
   private readonly metadata: grpc.Metadata;
   private readonly clientPool: ClientPool;
   private readonly statter: Statter;
@@ -201,6 +203,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     );
 
     this.serviceCache = this.options.serviceCache ?? createServiceCache();
+    this.longRunningOps = null;
     this.statter = options.statter ?? new NoOpStatter();
   }
 
@@ -208,7 +211,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     return this.options.mccAccountId;
   }
 
-  private getRpcImpl(serviceName: serviceNames): $protobuf.RPCImpl {
+  private getRpcImpl(
+    serviceName: serviceNames | "Operations"
+  ): $protobuf.RPCImpl {
     const timeout = this.options?.timeout;
     let call: ClientUnaryCall | undefined;
 
@@ -223,8 +228,13 @@ export class GoogleAdsClient implements IGoogleAdsClient {
       const client = this.clientPool.getClient();
       const thisStatter = this.statter;
 
+      const methodName =
+        serviceName !== "Operations"
+          ? `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`
+          : `/google.longrunning.Operations/${method.name}`;
+
       call = client.makeUnaryRequest(
-        `/google.ads.googleads.${GOOGLE_ADS_VERSION}.services.${serviceName}/${method.name}`,
+        methodName,
         (value: Uint8Array) => Buffer.from(value),
         (value: Buffer) => value,
         requestData,
@@ -299,7 +309,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     } = {},
     orderBy: string | undefined,
     orderByDirection: "ASC" | "DESC" = "ASC",
-    limit: number | undefined
+    limit: number | undefined,
+    includeDrafts: boolean
   ) {
     const fieldSql = fields.map((f) => f.name).join(", ");
 
@@ -342,6 +353,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""
       }`,
       `${limit ? `LIMIT ${limit}` : ""}`,
+      `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`
     ]
       .filter((seg) => !!seg)
       .join(" ");
@@ -376,7 +388,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         params.filters,
         params.orderBy ? snakeCase(params.orderBy as string) : undefined,
         params.orderByDirection,
-        params.limit
+        params.limit,
+        params.includeDrafts || false
       );
 
       const request = {
@@ -414,7 +427,8 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     customerId: string,
     resource: R,
     resourceId: number,
-    fields?: string[]
+    fields?: string[],
+    includeDrafts?: boolean,
   ): Promise<InstanceType<resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
       resource
@@ -427,6 +441,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         resourceName: [resourceName],
       } as any,
       fields,
+      includeDrafts
     });
 
     if (results.length > 0) {
@@ -460,6 +475,16 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     this.serviceCache.set(serviceName, service as InstanceType<services[T]>);
     return service as InstanceType<services[T]>;
+  }
+
+  public getLongRunningOperationsService(): google.longrunning.Operations {
+    if (this.longRunningOps === null) {
+      this.longRunningOps = new google.longrunning.Operations(
+        this.getRpcImpl("Operations")
+      );
+    }
+
+    return this.longRunningOps;
   }
 }
 
