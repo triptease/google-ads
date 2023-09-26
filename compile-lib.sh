@@ -1,30 +1,27 @@
 set -ex
 
-BASE_EXPORT_PATH="./compiled/google-proto"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-rm -rf compiled | true
-rm -rf googleapis | true
+DEFINITIONS_DIR="$SCRIPT_DIR/definitions"
+PROTO_DIR="$DEFINITIONS_DIR/proto"
 
-mkdir -p ./compiled
+GOOGLE_ADS_VERSION=v14
+fetch_and_format_protobuf_definitions () {
+  # https://buf.build/docs/format/style
+  yarn buf format https://github.com/googleapis/googleapis.git \
+    --path google/ads/googleads/$GOOGLE_ADS_VERSION \
+    --path google/api \
+    --path google/logging \
+    --path google/longrunning \
+    --path google/rpc \
+    -o "$PROTO_DIR"
+}
 
-git clone https://github.com/googleapis/googleapis.git
-cd googleapis
-# most recent commit to GoogleAds protobuf definitions:
-# https://github.com/googleapis/googleapis/tree/master/google/ads/googleads
-git checkout 36f0f69727c7ed65048e587c88000f4358f3ca1d
-cd ../
+generate_static_code_and_typescript_definitions () {
+  # https://github.com/protobufjs/protobuf.js/tree/master/cli#protobufjs-cli
+  yarn pbjs -t static-module -w commonjs -o "$DEFINITIONS_DIR"/googleads.js "$PROTO_DIR"/**/*.proto
+  yarn pbts -o "$DEFINITIONS_DIR"/googleads.d.ts "$DEFINITIONS_DIR"/googleads.js
+}
 
-ADS_VERSION=v12
-PROTO_ROOT_DIR=googleapis/
-
-PROTO_COMMON_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/common/*.proto
-PROTO_ERRORS_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/errors/*.proto
-PROTO_ENUMS_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/enums/*.proto
-PROTO_RESOURCES_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/resources/*.proto
-PROTO_SERVICES_ONLY=$(echo $PROTO_ROOT_DIR)google/ads/googleads/$(echo $ADS_VERSION)/services/*.proto
-
-PROTO_GOOGLE_DEPENDENCIES="$(echo $PROTO_ROOT_DIR)google/rpc/*.proto $(echo $PROTO_ROOT_DIR)google/longrunning/*.proto"
-ALL_PROTOBUFS="$(echo $PROTO_GOOGLE_DEPENDENCIES) $(echo $PROTO_COMMON_ONLY) $(echo $PROTO_ERRORS_ONLY) $(echo $PROTO_ENUMS_ONLY) $(echo $PROTO_RESOURCES_ONLY) $(echo $PROTO_SERVICES_ONLY)"
-
-yarn pbjs -t static-module -w commonjs -o $BASE_EXPORT_PATH.js $ALL_PROTOBUFS
-yarn pbts -o $BASE_EXPORT_PATH.d.ts $BASE_EXPORT_PATH.js
+fetch_and_format_protobuf_definitions
+generate_static_code_and_typescript_definitions

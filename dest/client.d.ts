@@ -1,15 +1,15 @@
 import { JWTOptions } from "google-auth-library";
 import * as grpc from "@grpc/grpc-js";
 import { StatusObject } from "@grpc/grpc-js";
-import { google } from "../compiled/google-proto";
+import { google } from "../definitions/googleads";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ServiceClient } from "@grpc/grpc-js/build/src/make-client";
 import { Logger } from "winston";
 import { Statter } from "./statter";
-declare const services: typeof google.ads.googleads.v12.services;
+declare const services: typeof google.ads.googleads.v14.services;
 type services = typeof services;
 type serviceNames = keyof services;
-declare const resources: typeof google.ads.googleads.v12.resources;
+declare const resources: typeof google.ads.googleads.v14.resources;
 type resources = typeof resources;
 type resourceNames = keyof resources;
 export interface Stoppable {
@@ -89,7 +89,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
 }
 export declare class GaClientError extends Error implements StatusObject {
-    firstError: google.ads.googleads.v12.errors.IErrorCode | null | undefined;
+    firstError: google.ads.googleads.v14.errors.IErrorCode | null | undefined;
     code: Status;
     details: string;
     metadata: grpc.Metadata;

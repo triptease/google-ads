@@ -22,25 +22,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
-var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
-var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var g = generator.apply(thisArg, _arguments || []), i, q = [];
-    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
-    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
-    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
-    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
-    function fulfill(value) { resume("next", value); }
-    function reject(value) { resume("throw", value); }
-    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -51,13 +32,13 @@ const google_auth_library_1 = require("google-auth-library");
 const grpc = __importStar(require("@grpc/grpc-js"));
 const lodash_1 = require("lodash");
 const protobufjs_1 = require("protobufjs");
-const google_proto_1 = require("../compiled/google-proto");
+const googleads_1 = require("../definitions/googleads");
 const extract_1 = require("./extract");
 const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v12";
-const services = google_proto_1.google.ads.googleads.v12.services;
-const resources = google_proto_1.google.ads.googleads.v12.resources;
+const GOOGLE_ADS_VERSION = "v14";
+const services = googleads_1.google.ads.googleads.v14.services;
+const resources = googleads_1.google.ads.googleads.v14.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
     const serviceCache = {};
@@ -93,10 +74,11 @@ const defaultClientCreator = (channelCredentials, callCredentials, serviceConfig
  * across a pool of clients, who each manage a single Channel per scheme/host/port.
  */
 class ClientPool {
+    size;
+    pool = [];
+    currentIndex = 0;
     constructor(authOptions, size = 1, clientCreator = defaultClientCreator) {
         this.size = size;
-        this.pool = [];
-        this.currentIndex = 0;
         if (size <= 0)
             throw new Error("Client pool size must be bigger than 0");
         const channelCredentials = grpc.credentials.createSsl();
@@ -120,22 +102,26 @@ class ClientPool {
 }
 exports.ClientPool = ClientPool;
 class GoogleAdsClient {
+    options;
+    // Service creation leaks memory, so services are cached and re-used.
+    serviceCache;
+    metadata;
+    clientPool;
+    statter;
     constructor(options) {
-        var _a, _b;
         this.options = options;
         this.metadata = new grpc.Metadata();
         this.metadata.add("developer-token", this.options.developerToken);
         this.metadata.add("login-customer-id", this.options.mccAccountId);
         this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
-        this.serviceCache = (_a = this.options.serviceCache) !== null && _a !== void 0 ? _a : (0, exports.createServiceCache)();
-        this.statter = (_b = options.statter) !== null && _b !== void 0 ? _b : new statter_1.NoOpStatter();
+        this.serviceCache = this.options.serviceCache ?? (0, exports.createServiceCache)();
+        this.statter = options.statter ?? new statter_1.NoOpStatter();
     }
     getMccAccountId() {
         return this.options.mccAccountId;
     }
     getRpcImpl(serviceName) {
-        var _a;
-        const timeout = (_a = this.options) === null || _a === void 0 ? void 0 : _a.timeout;
+        const timeout = this.options?.timeout;
         let call;
         return (method, requestData, callback) => {
             if (method === null && requestData === null && callback == null) {
@@ -173,6 +159,7 @@ class GoogleAdsClient {
             return call;
         };
     }
+    fieldsCache;
     async getFieldsForTable(tableName) {
         if (!this.fieldsCache) {
             const fieldQueryService = this.getService("GoogleAdsFieldService");
@@ -225,66 +212,45 @@ class GoogleAdsClient {
             .join(" ");
     }
     async search(params) {
-        var _a, e_1, _b, _c;
         const results = [];
-        try {
-            for (var _d = true, _e = __asyncValues(this.searchGenerator(params)), _f; _f = await _e.next(), _a = _f.done, !_a;) {
-                _c = _f.value;
-                _d = false;
-                try {
-                    const x = _c;
-                    results.push(x);
-                }
-                finally {
-                    _d = true;
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (!_d && !_a && (_b = _e.return)) await _b.call(_e);
-            }
-            finally { if (e_1) throw e_1.error; }
+        for await (const x of this.searchGenerator(params)) {
+            results.push(x);
         }
         return results;
     }
-    searchGenerator(params) {
-        var _a, _b;
-        return __asyncGenerator(this, arguments, function* searchGenerator_1() {
-            const tableName = (0, lodash_1.snakeCase)(params.resource);
-            const objName = (0, lodash_1.camelCase)(params.resource);
-            const fields = ((_a = params.fields) === null || _a === void 0 ? void 0 : _a.length)
-                ? params.fields.map((f) => ({ name: f }))
-                : yield __await(this.getFieldsForTable(tableName));
-            const googleAdsService = this.getService("GoogleAdsService");
-            let token = null;
-            do {
-                const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit);
-                const request = {
-                    customerId: params.customerId,
-                    query,
-                    pageToken: token,
-                    pageSize: 1000,
-                };
-                let result;
-                try {
-                    result = yield __await(googleAdsService.search(request));
-                }
-                catch (error) {
-                    (_b = this.options.logger) === null || _b === void 0 ? void 0 : _b.error("Error occurred during search", {
-                        request,
-                        error,
-                    });
-                    throw error;
-                }
-                token = result.nextPageToken;
-                for (const field of result.results) {
-                    yield yield __await(field[objName]);
-                }
-            } while (token);
-            return yield __await(void 0);
-        });
+    async *searchGenerator(params) {
+        const tableName = (0, lodash_1.snakeCase)(params.resource);
+        const objName = (0, lodash_1.camelCase)(params.resource);
+        const fields = params.fields?.length
+            ? params.fields.map((f) => ({ name: f }))
+            : await this.getFieldsForTable(tableName);
+        const googleAdsService = this.getService("GoogleAdsService");
+        let token = null;
+        do {
+            const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit);
+            const request = {
+                customerId: params.customerId,
+                query,
+                pageToken: token,
+                pageSize: 1000,
+            };
+            let result;
+            try {
+                result = await googleAdsService.search(request);
+            }
+            catch (error) {
+                this.options.logger?.error("Error occurred during search", {
+                    request,
+                    error,
+                });
+                throw error;
+            }
+            token = result.nextPageToken;
+            for (const field of result.results) {
+                yield field[objName];
+            }
+        } while (token);
+        return;
     }
     stop() {
         return this.serviceCache.clear();
@@ -322,15 +288,18 @@ class GoogleAdsClient {
 }
 exports.GoogleAdsClient = GoogleAdsClient;
 class GaClientError extends Error {
+    firstError;
+    code;
+    details;
+    metadata;
     constructor(status) {
-        var _a, _b;
         const failures = parseGoogleAdsErrorFromMetadata(status.metadata);
         const failureObj = failures.length > 0 ? failures : status.details;
         super(JSON.stringify(failureObj, null, 2));
         this.details = this.message;
         this.code = status.code;
         this.metadata = status.metadata;
-        this.firstError = (_b = (_a = failures[0]) === null || _a === void 0 ? void 0 : _a.errors[0]) === null || _b === void 0 ? void 0 : _b.errorCode;
+        this.firstError = failures[0]?.errors[0]?.errorCode;
     }
 }
 exports.GaClientError = GaClientError;
@@ -340,7 +309,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map((bytes) => google_proto_1.google.ads.googleads.v12.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => googleads_1.google.ads.googleads.v14.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;

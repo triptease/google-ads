@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const long_1 = __importDefault(require("long"));
-const google_proto_1 = require("../compiled/google-proto");
+const googleads_1 = require("../definitions/googleads");
 const extract_1 = require("./extract");
 describe("flatten", () => {
     it("should hoist objs value properties", () => {
@@ -54,8 +54,8 @@ describe("flatten", () => {
     test("extract should not mangle Long values", () => {
         // create a simple protobuf object with a campaign id in it
         const id = long_1.default.fromNumber(12345);
-        const campaign = new google_proto_1.google.ads.googleads.v12.resources.Campaign({ id });
-        const row = new google_proto_1.google.ads.googleads.v12.services.GoogleAdsRow({
+        const campaign = new googleads_1.google.ads.googleads.v14.resources.Campaign({ id });
+        const row = new googleads_1.google.ads.googleads.v14.services.GoogleAdsRow({
             campaign,
         });
         const extractedRow = (0, extract_1.extract)(row, ["campaign"]);
@@ -65,7 +65,7 @@ describe("flatten", () => {
     });
     test("flatten should not mangle Long values", () => {
         const id = long_1.default.fromNumber(12345);
-        const campaign = new google_proto_1.google.ads.googleads.v12.resources.Campaign({ id });
+        const campaign = new googleads_1.google.ads.googleads.v14.resources.Campaign({ id });
         const flattenedCampaign = (0, extract_1.flatten)(campaign);
         expect(flattenedCampaign.id).toEqual(12345);
         const reFlattenedCampaign = (0, extract_1.flatten)(flattenedCampaign);

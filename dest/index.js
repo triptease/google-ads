@@ -15,16 +15,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoogleAds = void 0;
-const google_proto_1 = require("../compiled/google-proto");
+const googleads_1 = require("../definitions/googleads");
 var GoogleAds;
 (function (GoogleAds) {
-    GoogleAds.protobuf = google_proto_1.google.protobuf;
-    GoogleAds.services = google_proto_1.google.ads.googleads.v12.services;
-    GoogleAds.resources = google_proto_1.google.ads.googleads.v12.resources;
-    GoogleAds.enums = google_proto_1.google.ads.googleads.v12.enums;
-    GoogleAds.common = google_proto_1.google.ads.googleads.v12.common;
-    GoogleAds.errors = google_proto_1.google.ads.googleads.v12.errors;
-})(GoogleAds = exports.GoogleAds || (exports.GoogleAds = {}));
+    GoogleAds.protobuf = googleads_1.google.protobuf;
+    GoogleAds.services = googleads_1.google.ads.googleads.v14.services;
+    GoogleAds.resources = googleads_1.google.ads.googleads.v14.resources;
+    GoogleAds.enums = googleads_1.google.ads.googleads.v14.enums;
+    GoogleAds.common = googleads_1.google.ads.googleads.v14.common;
+    GoogleAds.errors = googleads_1.google.ads.googleads.v14.errors;
+})(GoogleAds || (exports.GoogleAds = GoogleAds = {}));
 __exportStar(require("./client"), exports);
 __exportStar(require("./extract"), exports);
 __exportStar(require("./mock-client"), exports);
