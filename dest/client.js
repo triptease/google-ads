@@ -37,7 +37,10 @@ const extract_1 = require("./extract");
 const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v14";
-const services = googleads_1.google.ads.googleads.v14.services;
+const services = {
+    ...googleads_1.google.ads.googleads.v14.services,
+    ...googleads_1.google.longrunning,
+};
 const resources = googleads_1.google.ads.googleads.v14.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
@@ -212,7 +215,7 @@ class GoogleAdsClient {
             `${wheresSql ? `WHERE ${wheresSql}` : ""}`,
             `${orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""}`,
             `${limit ? `LIMIT ${limit}` : ""}`,
-            `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`
+            `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`,
         ]
             .filter((seg) => !!seg)
             .join(" ");
@@ -271,7 +274,7 @@ class GoogleAdsClient {
                 resourceName: [resourceName],
             },
             fields,
-            includeDrafts
+            includeDrafts,
         });
         if (results.length > 0) {
             return results[0];

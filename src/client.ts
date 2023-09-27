@@ -15,13 +15,16 @@ import { NoOpStatter, Statter } from "./statter";
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v14";
 
-const services = google.ads.googleads.v14.services;
-type services = typeof services;
-type serviceNames = keyof services;
+const services = {
+  ...google.ads.googleads.v14.services,
+  ...google.longrunning,
+};
+export type Services = typeof services;
+export type ServiceNames = keyof Services;
 
 const resources = google.ads.googleads.v14.resources;
-type resources = typeof resources;
-type resourceNames = keyof resources;
+export type Resources = typeof resources;
+export type ResourceNames = keyof Resources;
 
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 
@@ -30,13 +33,15 @@ export interface Stoppable {
 }
 
 export interface IServiceCache {
-  set<T extends serviceNames>(
+  set<T extends ServiceNames>(
     serviceName: T,
-    service: InstanceType<services[T]>
+    service: InstanceType<Services[T]>,
   ): void;
-  get<T extends serviceNames>(
-    serviceName: T
-  ): InstanceType<services[T]> | undefined;
+
+  get<T extends ServiceNames>(
+    serviceName: T,
+  ): InstanceType<Services[T]> | undefined;
+
   clear(): void;
 }
 
@@ -47,7 +52,7 @@ export const createServiceCache = (): IServiceCache => {
     get: (serviceName) => {
       if (serviceCache[serviceName]) {
         return serviceCache[serviceName] as InstanceType<
-          services[typeof serviceName]
+          Services[typeof serviceName]
         >;
       }
     },
@@ -56,8 +61,8 @@ export const createServiceCache = (): IServiceCache => {
     },
     clear: () => {
       for (const serviceName of Object.keys(
-        serviceCache
-      ) as (keyof services)[]) {
+        serviceCache,
+      ) as (keyof Services)[]) {
         (serviceCache[serviceName] as rpc.Service).end();
         delete serviceCache[serviceName];
       }
@@ -77,13 +82,14 @@ export interface GoogleAdsClientOptions {
 }
 
 export class ResourceNotFoundError extends Error {}
+
 export class InvalidRPCServiceError extends Error {}
 
-export interface ClientSearchParams<R extends resourceNames> {
+export interface ClientSearchParams<R extends ResourceNames> {
   customerId: string;
   resource: R;
   filters?: {
-    [attr in keyof InstanceType<resources[R]>]?:
+    [attr in keyof InstanceType<Resources[R]>]?:
       | boolean
       | string
       | number
@@ -92,7 +98,7 @@ export interface ClientSearchParams<R extends resourceNames> {
       | { raw: string };
   };
   fields?: string[];
-  orderBy?: keyof InstanceType<resources[R]>;
+  orderBy?: keyof InstanceType<Resources[R]>;
   orderByDirection?: "ASC" | "DESC";
   limit?: number;
   includeDrafts?: boolean;
@@ -100,40 +106,43 @@ export interface ClientSearchParams<R extends resourceNames> {
 
 export interface IGoogleAdsClient extends Stoppable {
   getMccAccountId(): string;
-  search<R extends resourceNames>(
-    params: ClientSearchParams<R>
-  ): Promise<Array<InstanceType<resources[R]>>>;
-  findOne<R extends resourceNames>(
+
+  search<R extends ResourceNames>(
+    params: ClientSearchParams<R>,
+  ): Promise<Array<InstanceType<Resources[R]>>>;
+
+  findOne<R extends ResourceNames>(
     customerId: string,
     resource: R,
     resourceId: number,
-    fields?: string[]
-  ): Promise<InstanceType<resources[R]>>;
-  getService<T extends serviceNames>(serviceName: T): InstanceType<services[T]>;
+    fields?: string[],
+  ): Promise<InstanceType<Resources[R]>>;
+
+  getService<T extends ServiceNames>(serviceName: T): InstanceType<Services[T]>;
 }
 
-type ServiceCache = Partial<{ [K in serviceNames]: InstanceType<services[K]> }>;
+type ServiceCache = Partial<{ [K in ServiceNames]: InstanceType<Services[K]> }>;
 
 export interface ClientCreator {
   (
     channelCredentials: grpc.ChannelCredentials,
     callCredentials: grpc.CallCredentials,
-    serviceConfig: string
+    serviceConfig: string,
   ): ServiceClient;
 }
 
 const defaultClientCreator: ClientCreator = (
   channelCredentials: grpc.ChannelCredentials,
   callCredentials: grpc.CallCredentials,
-  serviceConfig: string
+  serviceConfig: string,
 ) =>
   new Client(
     GOOGLE_ADS_ENDPOINT,
     grpc.credentials.combineChannelCredentials(
       channelCredentials,
-      callCredentials
+      callCredentials,
     ),
-    { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 }
+    { "grpc.service_config": serviceConfig, "grpc.enable_channelz": 0 },
   );
 
 /**
@@ -149,7 +158,7 @@ export class ClientPool {
   constructor(
     authOptions: JWTOptions,
     private readonly size: number = 1,
-    clientCreator: ClientCreator = defaultClientCreator
+    clientCreator: ClientCreator = defaultClientCreator,
   ) {
     if (size <= 0) throw new Error("Client pool size must be bigger than 0");
 
@@ -166,7 +175,7 @@ export class ClientPool {
       const client = clientCreator(
         channelCredentials,
         callCredentials,
-        serviceConfig
+        serviceConfig,
       );
 
       this.pool.push(client);
@@ -199,7 +208,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     this.clientPool = new ClientPool(
       this.options.authOptions,
-      this.options.clientPoolSize
+      this.options.clientPoolSize,
     );
 
     this.serviceCache = this.options.serviceCache ?? createServiceCache();
@@ -211,9 +220,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     return this.options.mccAccountId;
   }
 
-  private getRpcImpl(
-    serviceName: serviceNames | "Operations"
-  ): $protobuf.RPCImpl {
+  private getRpcImpl(serviceName: ServiceNames): $protobuf.RPCImpl {
     const timeout = this.options?.timeout;
     let call: ClientUnaryCall | undefined;
 
@@ -262,7 +269,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
             ]);
           }
           callback(err, value);
-        }
+        },
       );
       return call;
     };
@@ -273,6 +280,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     | Array<
         extract<google.ads.googleads.v14.resources.IGoogleAdsField, "name">
       >;
+
   private async getFieldsForTable(tableName: string) {
     if (!this.fieldsCache) {
       const fieldQueryService = this.getService("GoogleAdsFieldService");
@@ -287,7 +295,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           (field) =>
             // Selecting this field will break the google ads api always remove it
             field.name !==
-            "campaign_criterion.keyword_theme.free_form_keyword_theme"
+            "campaign_criterion.keyword_theme.free_form_keyword_theme",
         );
     }
 
@@ -310,7 +318,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     orderBy: string | undefined,
     orderByDirection: "ASC" | "DESC" = "ASC",
     limit: number | undefined,
-    includeDrafts: boolean
+    includeDrafts: boolean,
   ) {
     const fieldSql = fields.map((f) => f.name).join(", ");
 
@@ -331,7 +339,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
           : [filterValue];
 
         const quotedFilters = filterValues.map((filterValue) =>
-          SqlString.escape(filterValue)
+          SqlString.escape(filterValue),
         );
         const tableFieldName = `${tableName}.${snakeCase(filterName)}`;
 
@@ -353,16 +361,16 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         orderBy ? `ORDER BY ${tableName}.${orderBy} ${orderByDirection}` : ""
       }`,
       `${limit ? `LIMIT ${limit}` : ""}`,
-      `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`
+      `${includeDrafts ? `PARAMETERS include_drafts = true` : ""}`,
     ]
       .filter((seg) => !!seg)
       .join(" ");
   }
 
-  public async search<R extends resourceNames>(
-    params: ClientSearchParams<R>
-  ): Promise<Array<InstanceType<resources[R]>>> {
-    const results: Array<InstanceType<resources[R]>> = [];
+  public async search<R extends ResourceNames>(
+    params: ClientSearchParams<R>,
+  ): Promise<Array<InstanceType<Resources[R]>>> {
+    const results: Array<InstanceType<Resources[R]>> = [];
     for await (const x of this.searchGenerator(params)) {
       results.push(x);
     }
@@ -370,9 +378,9 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     return results;
   }
 
-  public async *searchGenerator<R extends resourceNames>(
-    params: ClientSearchParams<R>
-  ): AsyncIterable<InstanceType<resources[R]>> {
+  public async *searchGenerator<R extends ResourceNames>(
+    params: ClientSearchParams<R>,
+  ): AsyncIterable<InstanceType<Resources[R]>> {
     const tableName = snakeCase(params.resource);
     const objName = camelCase(params.resource);
     const fields = params.fields?.length
@@ -389,7 +397,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         params.orderBy ? snakeCase(params.orderBy as string) : undefined,
         params.orderByDirection,
         params.limit,
-        params.includeDrafts || false
+        params.includeDrafts || false,
       );
 
       const request = {
@@ -423,15 +431,15 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     return this.serviceCache.clear();
   }
 
-  public async findOne<R extends resourceNames>(
+  public async findOne<R extends ResourceNames>(
     customerId: string,
     resource: R,
     resourceId: number,
     fields?: string[],
     includeDrafts?: boolean,
-  ): Promise<InstanceType<resources[R]>> {
+  ): Promise<InstanceType<Resources[R]>> {
     const resourceName = `customers/${customerId}/${camelCase(
-      resource
+      resource,
     )}s/${resourceId}`;
     const results = await this.search({
       customerId,
@@ -441,7 +449,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
         resourceName: [resourceName],
       } as any,
       fields,
-      includeDrafts
+      includeDrafts,
     });
 
     if (results.length > 0) {
@@ -449,13 +457,13 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     }
 
     throw new ResourceNotFoundError(
-      `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`
+      `Resource ${resource} with resourceName ${resourceName} for customerId ${customerId} does not exist`,
     );
   }
 
-  public getService<T extends serviceNames>(
-    serviceName: T
-  ): InstanceType<services[T]> {
+  public getService<T extends ServiceNames>(
+    serviceName: T,
+  ): InstanceType<Services[T]> {
     const cachedService = this.serviceCache.get(serviceName);
 
     if (cachedService) {
@@ -466,21 +474,21 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     if (!(rpcServiceConstructor.prototype instanceof rpc.Service)) {
       throw new InvalidRPCServiceError(
-        `Service with serviceName ${serviceName} does not support remote procedure calls`
+        `Service with serviceName ${serviceName} does not support remote procedure calls`,
       );
     }
 
     const rpcImplementation = this.getRpcImpl(serviceName);
     const service = new rpcServiceConstructor(rpcImplementation);
 
-    this.serviceCache.set(serviceName, service as InstanceType<services[T]>);
-    return service as InstanceType<services[T]>;
+    this.serviceCache.set(serviceName, service as InstanceType<Services[T]>);
+    return service as InstanceType<Services[T]>;
   }
 
   public getLongRunningOperationsService(): google.longrunning.Operations {
     if (this.longRunningOps === null) {
       this.longRunningOps = new google.longrunning.Operations(
-        this.getRpcImpl("Operations")
+        this.getRpcImpl("Operations"),
       );
     }
 
@@ -511,7 +519,7 @@ export class GaClientError extends Error implements StatusObject {
 const FAILURE_KEY = `google.ads.googleads.${GOOGLE_ADS_VERSION}.errors.googleadsfailure-bin`;
 
 function parseGoogleAdsErrorFromMetadata(
-  metadata: grpc.Metadata | undefined
+  metadata: grpc.Metadata | undefined,
 ): google.ads.googleads.v14.errors.GoogleAdsFailure[] {
   if (!metadata) {
     return [];
@@ -520,7 +528,7 @@ function parseGoogleAdsErrorFromMetadata(
   const failureArray = metadata.get(FAILURE_KEY);
 
   return failureArray.map((bytes) =>
-    google.ads.googleads.v14.errors.GoogleAdsFailure.decode(bytes as any)
+    google.ads.googleads.v14.errors.GoogleAdsFailure.decode(bytes as any),
   );
 }
 

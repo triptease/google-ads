@@ -7,6 +7,7 @@ import {
   ClientPool,
   GoogleAdsClient,
   ResourceNotFoundError,
+  ServiceNames,
 } from "./client";
 
 const settings = {
@@ -73,7 +74,7 @@ describe("ClientPool", () => {
     const clientPool = new ClientPool(
       {} as unknown as OAuth2Client,
       2,
-      mockClientCreator
+      mockClientCreator,
     );
 
     const client1 = clientPool.getClient();
@@ -97,7 +98,7 @@ describe("GoogleAdsClient", () => {
       await client.findOne("123", "Campaign", 456);
 
       expect(
-        services.GoogleAdsFieldService.searchGoogleAdsFields
+        services.GoogleAdsFieldService.searchGoogleAdsFields,
       ).toBeCalledWith({
         query: `SELECT name, selectable, category`,
       });
@@ -121,7 +122,7 @@ describe("GoogleAdsClient", () => {
       ]);
 
       expect(
-        services.GoogleAdsFieldService.searchGoogleAdsFields
+        services.GoogleAdsFieldService.searchGoogleAdsFields,
       ).not.toHaveBeenCalled();
 
       expect(services.GoogleAdsService.search).toBeCalledWith({
@@ -137,10 +138,10 @@ describe("GoogleAdsClient", () => {
       const services = buildMockGetServices();
       client.getService = services;
 
-      await client.findOne("123", "Campaign", 456, ['campaign.status'], true);
+      await client.findOne("123", "Campaign", 456, ["campaign.status"], true);
 
       expect(
-        services.GoogleAdsFieldService.searchGoogleAdsFields
+        services.GoogleAdsFieldService.searchGoogleAdsFields,
       ).not.toHaveBeenCalled();
 
       expect(services.GoogleAdsService.search).toBeCalledWith({
@@ -155,10 +156,10 @@ describe("GoogleAdsClient", () => {
       const client = new GoogleAdsClient(settings);
       const services = buildMockGetServices();
       client.getService = services;
-      services.GoogleAdsService.search = () => ({ results: [] } as any);
+      services.GoogleAdsService.search = () => ({ results: [] }) as any;
 
       await expect(client.findOne("123", "Campaign", 456)).rejects.toThrow(
-        ResourceNotFoundError
+        ResourceNotFoundError,
       );
     });
   });
@@ -179,7 +180,7 @@ describe("GoogleAdsClient", () => {
       });
 
       expect(
-        services.GoogleAdsFieldService.searchGoogleAdsFields
+        services.GoogleAdsFieldService.searchGoogleAdsFields,
       ).toBeCalledWith({
         query: `SELECT name, selectable, category`,
       });
@@ -208,7 +209,7 @@ describe("GoogleAdsClient", () => {
       });
 
       expect(
-        services.GoogleAdsFieldService.searchGoogleAdsFields
+        services.GoogleAdsFieldService.searchGoogleAdsFields,
       ).not.toHaveBeenCalled();
 
       expect(services.GoogleAdsService.search).toBeCalledWith({
@@ -358,7 +359,7 @@ describe("GoogleAdsClient", () => {
       expect(services.GoogleAdsService.search).toBeCalledWith(
         expect.objectContaining({
           query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234'`,
-        })
+        }),
       );
     });
 
@@ -374,13 +375,13 @@ describe("GoogleAdsClient", () => {
           status: "ENABLED",
           resourceName: "1234",
         },
-        includeDrafts: true
+        includeDrafts: true,
       });
 
       expect(services.GoogleAdsService.search).toBeCalledWith(
         expect.objectContaining({
           query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234' PARAMETERS include_drafts = true`,
-        })
+        }),
       );
     });
 
@@ -405,24 +406,26 @@ describe("GoogleAdsClient", () => {
       const client = new GoogleAdsClient(settings);
       const service = client.getService("CampaignService");
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v14.services.CampaignService
+        google.ads.googleads.v14.services.CampaignService,
       );
+    });
+
+    it("should get a long running operation (which is also an rpc.Service)", async () => {
+      const client = new GoogleAdsClient(settings);
+      const service = client.getService("Operations");
+      expect(service).toBeInstanceOf(google.longrunning.Operations);
     });
   });
 
   describe("stop", () => {
-    const services = google.ads.googleads.v14.services;
-    type services = typeof services;
-    type serviceNames = keyof services;
-
     it("should clear the cache and end all services when stopped", async () => {
       const testServiceCache = createServiceCache();
       const serviceCacheWrapper: IServiceCache = {
-        get: jest.fn(<T extends serviceNames>(serviceName: T) =>
-          testServiceCache.get(serviceName)
+        get: jest.fn(<T extends ServiceNames>(serviceName: T) =>
+          testServiceCache.get(serviceName),
         ),
         set: jest.fn((serviceName, service) =>
-          testServiceCache.set(serviceName, service)
+          testServiceCache.set(serviceName, service),
         ),
         clear: jest.fn(async () => testServiceCache.clear()),
       };
@@ -444,7 +447,7 @@ describe("GoogleAdsClient", () => {
       const serviceCacheWrapper: IServiceCache = {
         get: jest.fn((serviceName) => testServiceCache.get(serviceName)),
         set: jest.fn((serviceName, service) =>
-          testServiceCache.set(serviceName, service)
+          testServiceCache.set(serviceName, service),
         ),
         clear: jest.fn(() => testServiceCache.clear()),
       };
@@ -457,7 +460,7 @@ describe("GoogleAdsClient", () => {
       let service = client.getService("CampaignService");
 
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v14.services.CampaignService
+        google.ads.googleads.v14.services.CampaignService,
       );
 
       service = client.getService("CampaignService");
@@ -465,7 +468,7 @@ describe("GoogleAdsClient", () => {
       // Total number of sets should be 1
       expect(serviceCacheWrapper.set).toBeCalledTimes(1);
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v14.services.CampaignService
+        google.ads.googleads.v14.services.CampaignService,
       );
     });
 
@@ -484,7 +487,7 @@ describe("GoogleAdsClient", () => {
       let service = client.getService("CampaignService");
 
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v14.services.CampaignService
+        google.ads.googleads.v14.services.CampaignService,
       );
 
       service = client.getService("CampaignService");
@@ -493,7 +496,7 @@ describe("GoogleAdsClient", () => {
       // Total number of sets should be 2
       expect(serviceCacheBypass.set).toBeCalledTimes(2);
       expect(service).toBeInstanceOf(
-        google.ads.googleads.v14.services.CampaignService
+        google.ads.googleads.v14.services.CampaignService,
       );
       expect(serviceCacheBypass.clear).toBeCalledTimes(1);
     });

@@ -104,7 +104,7 @@ describe("GoogleAdsClient", () => {
             const client = new client_1.GoogleAdsClient(settings);
             const services = buildMockGetServices();
             client.getService = services;
-            await client.findOne("123", "Campaign", 456, ['campaign.status'], true);
+            await client.findOne("123", "Campaign", 456, ["campaign.status"], true);
             expect(services.GoogleAdsFieldService.searchGoogleAdsFields).not.toHaveBeenCalled();
             expect(services.GoogleAdsService.search).toBeCalledWith({
                 customerId: "123",
@@ -295,7 +295,7 @@ describe("GoogleAdsClient", () => {
                     status: "ENABLED",
                     resourceName: "1234",
                 },
-                includeDrafts: true
+                includeDrafts: true,
             });
             expect(services.GoogleAdsService.search).toBeCalledWith(expect.objectContaining({
                 query: `SELECT campaign.status FROM campaign WHERE campaign.status = 'ENABLED' and campaign.resource_name = '1234' PARAMETERS include_drafts = true`,
@@ -320,9 +320,13 @@ describe("GoogleAdsClient", () => {
             const service = client.getService("CampaignService");
             expect(service).toBeInstanceOf(googleads_1.google.ads.googleads.v14.services.CampaignService);
         });
+        it("should get a long running operation (which is also an rpc.Service)", async () => {
+            const client = new client_1.GoogleAdsClient(settings);
+            const service = client.getService("Operations");
+            expect(service).toBeInstanceOf(googleads_1.google.longrunning.Operations);
+        });
     });
     describe("stop", () => {
-        const services = googleads_1.google.ads.googleads.v14.services;
         it("should clear the cache and end all services when stopped", async () => {
             const testServiceCache = (0, _1.createServiceCache)();
             const serviceCacheWrapper = {
