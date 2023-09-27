@@ -75,7 +75,6 @@ export declare class ClientPool {
 export declare class GoogleAdsClient implements IGoogleAdsClient {
     private readonly options;
     private readonly serviceCache;
-    private longRunningOps;
     private readonly metadata;
     private readonly clientPool;
     private readonly statter;
@@ -90,7 +89,6 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     stop(): void;
     findOne<R extends ResourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[], includeDrafts?: boolean): Promise<InstanceType<Resources[R]>>;
     getService<T extends ServiceNames>(serviceName: T): InstanceType<Services[T]>;
-    getLongRunningOperationsService(): google.longrunning.Operations;
 }
 export declare class GaClientError extends Error implements StatusObject {
     firstError: google.ads.googleads.v14.errors.IErrorCode | null | undefined;

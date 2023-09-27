@@ -107,7 +107,6 @@ class GoogleAdsClient {
     options;
     // Service creation leaks memory, so services are cached and re-used.
     serviceCache;
-    longRunningOps;
     metadata;
     clientPool;
     statter;
@@ -118,7 +117,6 @@ class GoogleAdsClient {
         this.metadata.add("login-customer-id", this.options.mccAccountId);
         this.clientPool = new ClientPool(this.options.authOptions, this.options.clientPoolSize);
         this.serviceCache = this.options.serviceCache ?? (0, exports.createServiceCache)();
-        this.longRunningOps = null;
         this.statter = options.statter ?? new statter_1.NoOpStatter();
     }
     getMccAccountId() {
@@ -293,12 +291,6 @@ class GoogleAdsClient {
         const service = new rpcServiceConstructor(rpcImplementation);
         this.serviceCache.set(serviceName, service);
         return service;
-    }
-    getLongRunningOperationsService() {
-        if (this.longRunningOps === null) {
-            this.longRunningOps = new googleads_1.google.longrunning.Operations(this.getRpcImpl("Operations"));
-        }
-        return this.longRunningOps;
     }
 }
 exports.GoogleAdsClient = GoogleAdsClient;

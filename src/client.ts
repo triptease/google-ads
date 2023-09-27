@@ -193,7 +193,6 @@ export class GoogleAdsClient implements IGoogleAdsClient {
   private readonly options: GoogleAdsClientOptions;
   // Service creation leaks memory, so services are cached and re-used.
   private readonly serviceCache: IServiceCache;
-  private longRunningOps: google.longrunning.Operations | null;
   private readonly metadata: grpc.Metadata;
   private readonly clientPool: ClientPool;
   private readonly statter: Statter;
@@ -211,7 +210,6 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     );
 
     this.serviceCache = this.options.serviceCache ?? createServiceCache();
-    this.longRunningOps = null;
     this.statter = options.statter ?? new NoOpStatter();
   }
 
@@ -482,16 +480,6 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 
     this.serviceCache.set(serviceName, service as InstanceType<Services[T]>);
     return service as InstanceType<Services[T]>;
-  }
-
-  public getLongRunningOperationsService(): google.longrunning.Operations {
-    if (this.longRunningOps === null) {
-      this.longRunningOps = new google.longrunning.Operations(
-        this.getRpcImpl("Operations"),
-      );
-    }
-
-    return this.longRunningOps;
   }
 }
 
