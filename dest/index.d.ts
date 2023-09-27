@@ -1,6 +1,7 @@
 import { google } from "../definitions/googleads";
 export declare namespace GoogleAds {
     export import protobuf = google.protobuf;
+    export import longrunning = google.longrunning;
     export import services = google.ads.googleads.v14.services;
     export import resources = google.ads.googleads.v14.resources;
     export import enums = google.ads.googleads.v14.enums;

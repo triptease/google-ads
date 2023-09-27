@@ -19,6 +19,7 @@ const googleads_1 = require("../definitions/googleads");
 var GoogleAds;
 (function (GoogleAds) {
     GoogleAds.protobuf = googleads_1.google.protobuf;
+    GoogleAds.longrunning = googleads_1.google.longrunning;
     GoogleAds.services = googleads_1.google.ads.googleads.v14.services;
     GoogleAds.resources = googleads_1.google.ads.googleads.v14.resources;
     GoogleAds.enums = googleads_1.google.ads.googleads.v14.enums;

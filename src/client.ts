@@ -15,16 +15,15 @@ import { NoOpStatter, Statter } from "./statter";
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v14";
 
-const services = {
-  ...google.ads.googleads.v14.services,
-  ...google.longrunning,
-};
-export type Services = typeof services;
+const adsServices = google.ads.googleads.v14.services;
+const longrunningServices = google.longrunning;
+const services = { ...longrunningServices, ...adsServices };
+type Services = typeof adsServices & typeof longrunningServices;
 export type ServiceNames = keyof Services;
 
 const resources = google.ads.googleads.v14.resources;
-export type Resources = typeof resources;
-export type ResourceNames = keyof Resources;
+type Resources = typeof resources;
+type ResourceNames = keyof Resources;
 
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 

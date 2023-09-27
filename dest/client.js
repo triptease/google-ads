@@ -37,10 +37,9 @@ const extract_1 = require("./extract");
 const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
 const GOOGLE_ADS_VERSION = "v14";
-const services = {
-    ...googleads_1.google.ads.googleads.v14.services,
-    ...googleads_1.google.longrunning,
-};
+const adsServices = googleads_1.google.ads.googleads.v14.services;
+const longrunningServices = googleads_1.google.longrunning;
+const services = { ...longrunningServices, ...adsServices };
 const resources = googleads_1.google.ads.googleads.v14.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
