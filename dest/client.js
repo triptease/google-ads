@@ -292,6 +292,31 @@ class GoogleAdsClient {
         this.serviceCache.set(serviceName, service);
         return service;
     }
+    async searchStream(params) {
+        const tableName = (0, lodash_1.snakeCase)(params.resource);
+        const objName = (0, lodash_1.camelCase)(params.resource);
+        const fields = params.fields?.length
+            ? params.fields.map((f) => ({ name: f }))
+            : await this.getFieldsForTable(tableName);
+        const googleAdsService = this.getService("GoogleAdsService");
+        const query = this.buildSearchSql(tableName, fields, params.filters, params.orderBy ? (0, lodash_1.snakeCase)(params.orderBy) : undefined, params.orderByDirection, params.limit, params.includeDrafts || false);
+        const request = {
+            customerId: params.customerId,
+            query,
+        };
+        let result;
+        try {
+            result = await googleAdsService.searchStream(request);
+        }
+        catch (error) {
+            this.options.logger?.error("Error occurred during search", {
+                request,
+                error,
+            });
+            throw error;
+        }
+        return result.results.map((field) => field[objName]);
+    }
 }
 exports.GoogleAdsClient = GoogleAdsClient;
 class GaClientError extends Error {

@@ -38,6 +38,9 @@ function upperCaseFirstLetter(str) {
     return str;
 }
 class MockGoogleAdsClient {
+    searchStream(params) {
+        throw new Error("Method not implemented.");
+    }
     services = {};
     resources = {};
     idCounter = 1;

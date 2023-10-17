@@ -53,6 +53,7 @@ export interface ClientSearchParams<R extends ResourceNames> {
 export interface IGoogleAdsClient extends Stoppable {
     getMccAccountId(): string;
     search<R extends ResourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<Resources[R]>>>;
+    searchStream<R extends ResourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<Resources[R]>>>;
     findOne<R extends ResourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[]): Promise<InstanceType<Resources[R]>>;
     getService<T extends ServiceNames>(serviceName: T): InstanceType<Services[T]>;
 }
@@ -89,6 +90,7 @@ export declare class GoogleAdsClient implements IGoogleAdsClient {
     stop(): void;
     findOne<R extends ResourceNames>(customerId: string, resource: R, resourceId: number, fields?: string[], includeDrafts?: boolean): Promise<InstanceType<Resources[R]>>;
     getService<T extends ServiceNames>(serviceName: T): InstanceType<Services[T]>;
+    searchStream<R extends ResourceNames>(params: ClientSearchParams<R>): Promise<Array<InstanceType<Resources[R]>>>;
 }
 export declare class GaClientError extends Error implements StatusObject {
     firstError: google.ads.googleads.v14.errors.IErrorCode | null | undefined;
