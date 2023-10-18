@@ -44,7 +44,7 @@ function upperCaseFirstLetter(str: string) {
 }
 
 export class MockGoogleAdsClient implements IGoogleAdsClient {
-  searchStream(params: ClientSearchParams<any>): Promise<InstanceType<any>[]> {
+  public async searchStream(params: ClientSearchParams<any>): Promise<InstanceType<any>[]> {
     return this.search(params);
   }
 
