@@ -222,38 +222,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
     return resources;
   }
   public async searchStream(params: ClientSearchParams<any>): Promise<any> {
-    let resources =
-        params.resource in this.resources
-            ? Object.values(this.resources[params.resource])
-            : [];
-
-    if (params.filters !== undefined) {
-      resources = resources.filter((gResource: any) => {
-        const gResourceStringed = (google.ads.googleads.v14.resources as any)[
-            params.resource
-            ].toObject(gResource, {
-          enums: String,
-        });
-        const resource = flatten(gResourceStringed);
-
-        if (params.filters !== undefined) {
-          for (const filterKey of Object.keys(params.filters)) {
-            const filterValues = arrayify(params.filters[filterKey]);
-            if (filterValues.includes(resource[filterKey]) === false) {
-              return false;
-            }
-          }
-        }
-
-        return true;
-      });
-    }
-
-    if (params.limit) {
-      resources = resources.splice(0, 1);
-    }
-
-    return resources;
+    return this.search(params);
   }
   public stop(): void {
     //Do nothing
