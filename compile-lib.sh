@@ -5,7 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 DEFINITIONS_DIR="$SCRIPT_DIR/definitions"
 PROTO_DIR="$DEFINITIONS_DIR/proto"
 
-GOOGLE_ADS_VERSION=v14
+GOOGLE_ADS_VERSION=v16
 fetch_and_format_protobuf_definitions () {
   # https://buf.build/docs/format/style
   yarn buf format https://github.com/googleapis/googleapis.git \

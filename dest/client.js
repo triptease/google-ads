@@ -36,11 +36,11 @@ const googleads_1 = require("../definitions/googleads");
 const extract_1 = require("./extract");
 const statter_1 = require("./statter");
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v14";
-const adsServices = googleads_1.google.ads.googleads.v14.services;
+const GOOGLE_ADS_VERSION = "v16";
+const adsServices = googleads_1.google.ads.googleads.v16.services;
 const longrunningServices = googleads_1.google.longrunning;
 const services = { ...longrunningServices, ...adsServices };
-const resources = googleads_1.google.ads.googleads.v14.resources;
+const resources = googleads_1.google.ads.googleads.v16.resources;
 const Client = grpc.makeGenericClientConstructor({}, "", {});
 const createServiceCache = () => {
     const serviceCache = {};
@@ -341,7 +341,7 @@ function parseGoogleAdsErrorFromMetadata(metadata) {
         return [];
     }
     const failureArray = metadata.get(FAILURE_KEY);
-    return failureArray.map((bytes) => googleads_1.google.ads.googleads.v14.errors.GoogleAdsFailure.decode(bytes));
+    return failureArray.map((bytes) => googleads_1.google.ads.googleads.v16.errors.GoogleAdsFailure.decode(bytes));
 }
 function isServiceError(err) {
     return err && err.code && err.details && err.metadata;

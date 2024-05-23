@@ -13,15 +13,15 @@ import { Logger } from "winston";
 import {NoOpStatter, Statter} from "./statter";
 
 const GOOGLE_ADS_ENDPOINT = "googleads.googleapis.com:443";
-const GOOGLE_ADS_VERSION = "v14";
+const GOOGLE_ADS_VERSION = "v16";
 
-const adsServices = google.ads.googleads.v14.services;
+const adsServices = google.ads.googleads.v16.services;
 const longrunningServices = google.longrunning;
 const services = {...longrunningServices, ...adsServices};
 type Services = typeof adsServices & typeof longrunningServices;
 export type ServiceNames = keyof Services;
 
-const resources = google.ads.googleads.v14.resources;
+const resources = google.ads.googleads.v16.resources;
 type Resources = typeof resources;
 type ResourceNames = keyof Resources;
 
@@ -281,7 +281,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
     private fieldsCache:
         | undefined
         | Array<
-        extract<google.ads.googleads.v14.resources.IGoogleAdsField, "name">
+        extract<google.ads.googleads.v16.resources.IGoogleAdsField, "name">
     >;
 
     private async getFieldsForTable(tableName: string) {
@@ -410,7 +410,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
                 pageSize: 1000,
             };
 
-            let result: google.ads.googleads.v14.services.SearchGoogleAdsResponse;
+            let result: google.ads.googleads.v16.services.SearchGoogleAdsResponse;
             try {
                 result = await googleAdsService.search(request);
             } catch (error) {
@@ -511,7 +511,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
             query,
         };
 
-        let result: google.ads.googleads.v14.services.SearchGoogleAdsStreamResponse;
+        let result: google.ads.googleads.v16.services.SearchGoogleAdsStreamResponse;
         try {
             result = await googleAdsService.searchStream(request);
         } catch (error) {
@@ -528,7 +528,7 @@ export class GoogleAdsClient implements IGoogleAdsClient {
 }
 
 export class GaClientError extends Error implements StatusObject {
-    firstError: google.ads.googleads.v14.errors.IErrorCode | null | undefined;
+    firstError: google.ads.googleads.v16.errors.IErrorCode | null | undefined;
     code: Status;
     details: string;
     metadata: grpc.Metadata;
@@ -551,7 +551,7 @@ const FAILURE_KEY = `google.ads.googleads.${GOOGLE_ADS_VERSION}.errors.googleads
 
 function parseGoogleAdsErrorFromMetadata(
     metadata: grpc.Metadata | undefined,
-): google.ads.googleads.v14.errors.GoogleAdsFailure[] {
+): google.ads.googleads.v16.errors.GoogleAdsFailure[] {
     if (!metadata) {
         return [];
     }
@@ -559,7 +559,7 @@ function parseGoogleAdsErrorFromMetadata(
     const failureArray = metadata.get(FAILURE_KEY);
 
     return failureArray.map((bytes) =>
-        google.ads.googleads.v14.errors.GoogleAdsFailure.decode(bytes as any),
+        google.ads.googleads.v16.errors.GoogleAdsFailure.decode(bytes as any),
     );
 }
 
