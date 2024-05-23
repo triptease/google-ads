@@ -20,11 +20,11 @@ var GoogleAds;
 (function (GoogleAds) {
     GoogleAds.protobuf = googleads_1.google.protobuf;
     GoogleAds.longrunning = googleads_1.google.longrunning;
-    GoogleAds.services = googleads_1.google.ads.googleads.v16.services;
-    GoogleAds.resources = googleads_1.google.ads.googleads.v16.resources;
-    GoogleAds.enums = googleads_1.google.ads.googleads.v16.enums;
-    GoogleAds.common = googleads_1.google.ads.googleads.v16.common;
-    GoogleAds.errors = googleads_1.google.ads.googleads.v16.errors;
+    GoogleAds.services = googleads_1.google.ads.googleads.v15.services;
+    GoogleAds.resources = googleads_1.google.ads.googleads.v15.resources;
+    GoogleAds.enums = googleads_1.google.ads.googleads.v15.enums;
+    GoogleAds.common = googleads_1.google.ads.googleads.v15.common;
+    GoogleAds.errors = googleads_1.google.ads.googleads.v15.errors;
 })(GoogleAds || (exports.GoogleAds = GoogleAds = {}));
 __exportStar(require("./client"), exports);
 __exportStar(require("./extract"), exports);

@@ -9,8 +9,8 @@ const lodash_1 = require("lodash");
 const googleads_1 = require("../definitions/googleads");
 const client_1 = require("./client");
 const extract_1 = require("./extract");
-var TrackingCodeType = googleads_1.google.ads.googleads.v16.enums.TrackingCodeTypeEnum.TrackingCodeType;
-var TrackingCodePageFormat = googleads_1.google.ads.googleads.v16.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+var TrackingCodeType = googleads_1.google.ads.googleads.v15.enums.TrackingCodeTypeEnum.TrackingCodeType;
+var TrackingCodePageFormat = googleads_1.google.ads.googleads.v15.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 const hash32 = (str) => crypto_1.default
     .createHash("md5")
     .update(JSON.stringify(str))
@@ -154,7 +154,7 @@ class MockGoogleAdsClient {
             : [];
         if (params.filters !== undefined) {
             resources = resources.filter((gResource) => {
-                const gResourceStringed = googleads_1.google.ads.googleads.v16.resources[params.resource].toObject(gResource, {
+                const gResourceStringed = googleads_1.google.ads.googleads.v15.resources[params.resource].toObject(gResource, {
                     enums: String,
                 });
                 const resource = (0, extract_1.flatten)(gResourceStringed);

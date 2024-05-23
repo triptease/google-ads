@@ -54,8 +54,8 @@ describe("flatten", () => {
     test("extract should not mangle Long values", () => {
         // create a simple protobuf object with a campaign id in it
         const id = long_1.default.fromNumber(12345);
-        const campaign = new googleads_1.google.ads.googleads.v16.resources.Campaign({ id });
-        const row = new googleads_1.google.ads.googleads.v16.services.GoogleAdsRow({
+        const campaign = new googleads_1.google.ads.googleads.v15.resources.Campaign({ id });
+        const row = new googleads_1.google.ads.googleads.v15.services.GoogleAdsRow({
             campaign,
         });
         const extractedRow = (0, extract_1.extract)(row, ["campaign"]);
@@ -65,7 +65,7 @@ describe("flatten", () => {
     });
     test("flatten should not mangle Long values", () => {
         const id = long_1.default.fromNumber(12345);
-        const campaign = new googleads_1.google.ads.googleads.v16.resources.Campaign({ id });
+        const campaign = new googleads_1.google.ads.googleads.v15.resources.Campaign({ id });
         const flattenedCampaign = (0, extract_1.flatten)(campaign);
         expect(flattenedCampaign.id).toEqual(12345);
         const reFlattenedCampaign = (0, extract_1.flatten)(flattenedCampaign);

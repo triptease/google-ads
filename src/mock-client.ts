@@ -7,9 +7,9 @@ import {
   ResourceNotFoundError,
 } from "./client";
 import { flatten } from "./extract";
-import ITagSnippet = google.ads.googleads.v16.common.ITagSnippet;
-import TrackingCodeType = google.ads.googleads.v16.enums.TrackingCodeTypeEnum.TrackingCodeType;
-import TrackingCodePageFormat = google.ads.googleads.v16.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
+import ITagSnippet = google.ads.googleads.v15.common.ITagSnippet;
+import TrackingCodeType = google.ads.googleads.v15.enums.TrackingCodeTypeEnum.TrackingCodeType;
+import TrackingCodePageFormat = google.ads.googleads.v15.enums.TrackingCodePageFormatEnum.TrackingCodePageFormat;
 
 const hash32 = (str: any) =>
   crypto
@@ -195,7 +195,7 @@ export class MockGoogleAdsClient implements IGoogleAdsClient {
 
     if (params.filters !== undefined) {
       resources = resources.filter((gResource: any) => {
-        const gResourceStringed = (google.ads.googleads.v16.resources as any)[
+        const gResourceStringed = (google.ads.googleads.v15.resources as any)[
           params.resource
         ].toObject(gResource, {
           enums: String,
